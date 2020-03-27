@@ -133,17 +133,19 @@ def IntroduceTrafficIndex():
 	# Content #
 	###########
 	st.markdown("## Introduction to Traffic Index")
-	st.markdown("## Data Source")
-	showLoopDetectorMap()
-	st.markdown("## Traffic Index Calculation")
-	st.latex(r'''
-		\text{Traffic Index} = \frac{\displaystyle\sum_{i=1}^n S_i * V_i * D_i }{ \displaystyle\sum_{i=1}^n V_i * D_i * 65 }
-		''')
-	st.markdown("where $S_i$, $V_i$, and $D_i$ represent the **S**peed, **V**olume, covered **D**istance "
-				"of each road segment $i$, respectively. "
-				"The unit of speed is mile per hour (mph) and the unit of covered distance is mile.")
-
-	date = st.date_input('Pick a date', datetime.datetime.now().date())
+	st.markdown("Traffic index can help us eaisly and intuitively understand the overall performance of urban traffic network. "
+				"In this website, we provide a traffic index to quantify the overall traffic condition in Seattle area. "
+				"With this website, you can view "
+				"\n * Traffic index with different temporal resolutions, ranging from one minute to one day. "
+				"\n * Traffic index of general purpose (GP) and HOV lanes. "
+				"\n * Impact of COVID-19 on urban traffic reflected by the traffic index. "
+				"\n * And other traffic performance metrics. " )
+	
+	st.markdown( "If you want to check more information, please select on the left navigation panel. Enjoy! :sunglasses:")
+	
+	#################################################################
+	st.markdown("## Today's Traffic Index")
+	date = st.date_input('Please pick a date', datetime.datetime.now().date())
 	df_TI = getTrafficIndex(date)
 
 	# df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'] * 65
@@ -172,8 +174,36 @@ def IntroduceTrafficIndex():
 
 	st.plotly_chart(fig)
 
-	dataFields = st.multiselect('Show Data',  list(df_TI.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
-	st.write(df_TI[dataFields])
+	# dataFields = st.multiselect('Show Data',  list(df_TI.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
+	# st.write(df_TI[dataFields])
+
+	#################################################################
+	st.markdown("## Data Source")
+	st.markdown("The traffic index is calcualted based on the data collected from more than 44800 inductive loop detector deployed on the freeways in Seattle area, "
+				"including I-5, I-90, I-405, SR-520, etc. The raw data comes from Washington State Department of Transportation (WSDOT). "
+				"Representative decectors are shown in the following map. ")
+	showLoopDetectorMap()
+
+	#################################################################
+	st.markdown("## Traffic Index Calculation")
+	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
+				"Each detector's meta data, including detector category, route, milepost, director, direction, address, etc., are also available. "
+				"Based on the consecutive detectors' location information, we seperate the freeways into segments, "
+				"each of which only contains one loop detector per lane. We a road segment's length is the corresponding detector's covered length. "
+				"The time interval of the data is one-minute. ")
+	st.markdown("The **Traffic Index** (**TI**) at time $t$ is calculated using the following equation:")
+	st.latex(r'''
+		\text{TI}_t = \frac{\displaystyle\sum_{i=1}^n S_t^i * V_t^i * D_t^i }{ \displaystyle\sum_{i=1}^n V_t^i * D_t^i * 65 }
+		''')
+	st.markdown("where $S_t^i$, $V_t^i$, and $D_t^i$ represent the **S**peed, **V**olume, covered **D**istance "
+				"of each road segment $i$ at time $t$, respectively. "
+				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
+				"The unit of covered distance is mile.")
+	st.markdown("In this way, the **TI** is a value ranges from 0 to 1 ($TI \in [0,1]$). "
+				"The closer to one the **TI** is, the better the overall network-wide traffic condition is. ")
+
+
+	
 
 
 def showTrafficIndex():
@@ -189,6 +219,9 @@ def showTrafficIndex():
 	########################
 	# main content
 	########################
+
+	st.markdown("In this section, we provide the traffic index over a period. Please pick the starting and ending date. "
+		"You can check or uncheck the checkbox in the left panel to adjuect the displayed information.")
 	sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 	edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
 	st.write('From ',sdate, ' to ', edate,':')
@@ -259,53 +292,144 @@ def showTrafficIndex():
 		st.write(df_TI_range[dataFields])
 
 
-def showDailyIndex():
+def showCOVID19():
+	
 
-	sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
-	edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
-	st.write('From ',sdate, ' to ',edate)
-
+	st.markdown("## COVID-19 in Washington State")
+	st.markdown("Since the early March 2020, the coronavirus start to outbreak in the US. "
+				"Except for affecting the public healthy, COVID-19 also has great impact on public transportaion, "
+				"especially when public business and public agencies shut down. Representative responses are listed as below: [\[source\]](https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Washington_(state))")
+	st.markdown("* **March 6**: Major tech companies ask Seattle employees to work from home. Amazon and Facebook have shut down individual offices as well. [\[link\]](https://www.theverge.com/2020/3/5/21166686/coronavirus-amazon-google-facebook-microsoft-twitter-seattle-staff-remote-work)\n"
+				"* **March 9**: UW suspends on-site classes and finals. [\[link\]](https://www.washington.edu/coronavirus/2020/03/06/beginning-march-9-classes-and-finals-will-not-be-held-in-person-message-to-students/) \n"
+				"* **March 13**: Gov. Inslee announces statewide school closures, expansion of limits on large gatherings. [\[link\]](https://medium.com/wagovernor/inslee-announces-statewide-school-closures-expansion-of-limits-on-large-gatherings-63d442111438) \n"
+				"* **March 16**: Gov. Inslee announces statewide shutdown of restaurants, bars and expanded social gathering limits. [\[link\]](https://www.governor.wa.gov/news-media/inslee-statement-statewide-shutdown-restaurants-bars-and-limits-size-gatherings-expanded) \n"
+				"* **March 23**: Gov. Inslee announces \"Stay Home, Stay Healthy\" order. [\[link\]](https://www.governor.wa.gov/news-media/inslee-announces-stay-home-stay-healthy%C2%A0order)")
+	#################################################################
+	st.markdown("## COVID-19 Cases")
+	st.markdown("The following dynamic plot displays the process of the coronavirus cases in Washington State.")
+	st.write("<iframe src='https://public.flourish.studio/visualisation/1696713/embed' frameborder='0' scrolling='no' style='width:100%;height:600px;'></iframe><div style='width:100%!;margin-top:4px!important;text-align:right!important;'><a class='flourish-credit' href='https://public.flourish.studio/visualisation/1696713/?utm_source=embed&utm_campaign=visualisation/1696713' target='_top' style='text-decoration:none!important'><img alt='Made with Flourish' src='https://public.flourish.studio/resources/made_with_flourish.svg' style='width:105px!important;height:16px!important;border:none!important;margin:0!important;'> </a></div>", unsafe_allow_html=True)
+	
+	#################################################################
+	st.markdown("## Impact of COVID-19 on Urban Traffic")
+	st.markdown("This section shows the impact of COVID-19 on urban traffic. "
+				"In the following chart, the trends of traffic indices and the coronavirus cases are displayed together.")
+	
+	sdate = datetime.datetime(2020, 2, 28)
+	edate = datetime.datetime(2020, 3, 25)
+	#################################################################
+	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
 	df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
-	df_DailyIndex['date'] = df_DailyIndex['date'].dt.date
+	df_DailyIndex = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
 
-	data = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
+	# # peak volume
+	# df_mpv = getMorningPeakVolume(sdate, edate)
+	# df_mpv['date'] = df_mpv['date'].astype('datetime64[ns]')
+	# df_mpv.rename(columns = {'avg_vol_gp':'Morning_GP', 'avg_vol_hov':'Morning_HOV'}, inplace = True) 
+	# df_epv = getEveningPeakVolume(sdate, edate)
+	# df_epv['date'] = df_epv['date'].astype('datetime64[ns]')
+	# df_epv.rename(columns = {'avg_vol_gp':'Evening_GP', 'avg_vol_hov':'Evening_HOV'}, inplace = True) 
+	# df_pv = pd.merge(df_mpv, df_epv, on='date')
+	
+	# get COVID info
+	df_COVID19 = getCOVID19Info()
+	df_COVID19['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
+	
+	data = pd.merge(df_DailyIndex, df_COVID19, on='date')
+
 	lw = 2  # line width
-	# Create traces
-	fig = go.Figure()
+
+	# Create figure with secondary y-axis
+	fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+	# Add traces for axis-2
 	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_gp'],
-							 mode='lines', line=dict(dash='solid', width=lw),
-							 name='Main lane'))
+							 mode='lines', line=dict(dash='dot', width=lw, color='#1f77b4'),
+							 name='Index - GP',
+							 legendgroup='group2'),
+					secondary_y=False)
 	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_hov'],
-							 mode='lines', line=dict(dash='solid', width=lw),
-							 name='HOV lane'))
-	fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Index',
-					  legend=dict(x=.01, y=0.05),
-					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
+							 mode='lines', line=dict(dash='dot', width=lw, color='#2ca02c'),
+							 name='Index - HOV',
+							 legendgroup='group2'),
+					secondary_y=False)
+
+	# Add traces for axis-1
+	fig.add_trace(go.Scatter(x=data['date'], y=data['confirmed case'],
+							 mode='lines+markers', line=dict(dash='solid', width=lw, color='red'),
+							 name='Confirmed Cases',
+							 legendgroup='group1'),
+					secondary_y=True)
+	fig.add_trace(go.Scatter(x=data['date'], y=data['new case'],
+							 mode='lines+markers', line=dict(dash='solid', width=lw, color='orange'),
+							 name='New Cases',
+							 legendgroup='group1'),
+					secondary_y=True)
+	fig.add_trace(go.Scatter(x=data['date'], y=data['total death'],
+							 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
+							 name='Total Death',
+							 legendgroup='group1'),
+					secondary_y=True)
+	
+
+	fig.update_traces(textposition='top center')
+	# Set x-axis title
+	fig.update_xaxes(title_text="Date")
+	# Set y-axes titles
+	fig.update_yaxes(title_text="Daily Traffic Index", 
+						range=[0.7, 1], 
+						showline=True, 
+						linecolor='rgb(204, 204, 204)', 
+						linewidth=2, 
+						showticklabels=True, 
+						ticks='outside', 
+						secondary_y=False)
+	fig.update_yaxes(title_text="COVID-19 Case Amount",
+						range=[0, 3000], 
+						showline=True, 
+						linecolor='rgb(204, 204, 204)', 
+						linewidth=2, 
+						showticklabels=True, 
+						ticks='outside', 
+						secondary_y=True)
+	fig.update_layout(xaxis=dict(
+						    showline=True,
+						    showgrid=False,
+						    showticklabels=True,
+						    linecolor='rgb(204, 204, 204)',
+						    linewidth=2,
+						    ticks='outside',
+						    tickfont=dict(
+						        family='Arial',
+						        size=12,
+						        color='rgb(82, 82, 82)',
+						    ),
+						),
+						legend=dict(x= 0.5, y=1.3, orientation="h"),
+					  	margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), 
+					  	width = 700, 
+					  	height = 450,
+					  	plot_bgcolor='white')
 	st.plotly_chart(fig)
 
-	# st.write(df_DailyIndex)
 
-	st.write("<iframe src='https://public.flourish.studio/visualisation/1694092/embed' frameborder='0' scrolling='no' style='width:100%;height:600px;'></iframe><div style='width:100%!;margin-top:4px!important;text-align:right!important;'><a class='flourish-credit' href='https://public.flourish.studio/visualisation/1694092/?utm_source=embed&utm_campaign=visualisation/1694092' target='_top' style='text-decoration:none!important'><img alt='Made with Flourish' src='https://public.flourish.studio/resources/made_with_flourish.svg' style='width:105px!important;height:16px!important;border:none!important;margin:0!important;'> </a></div>", unsafe_allow_html=True)
-	
-	
-
-
-def showRushHourVolume():
+def showOtherMetrics():
 	###########
 	# Sidebar #
 	###########
 	st.sidebar.markdown("## Components")
 	rushHourVolume = st.sidebar.checkbox("Volume at Rush Hours", value = True)
 
+	
 	########################
 	# main content
 	########################
+	st.markdown("## Other Traffic Performance Metrics")
+	sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
+	st.write('From ',sdate, ' to ',edate)
 	if rushHourVolume:
-		sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
-		edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
-		st.write('From ',sdate, ' to ',edate)
-
+		st.markdown("### Volume per Lane at Rush Hours")
 		df_mpv = getMorningPeakVolume(sdate, edate)
 		df_mpv['date'] = df_mpv['date'].astype('datetime64[ns]')
 		df_mpv.rename(columns = {'avg_vol_gp':'Morning_GP', 'avg_vol_hov':'Morning_HOV'}, inplace = True) 
@@ -328,7 +452,7 @@ def showRushHourVolume():
 								 mode='lines', line=dict(dash='solid', width=lw),
 								 name=item))
 
-		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Volume',
+		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Volume per Lane',
 						  legend=dict(x=.01, y=0.05),
 						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
 
@@ -345,7 +469,7 @@ def showLoopDetectorMap():
 			initial_view_state=pdk.ViewState(
 			latitude=47.59,
 			longitude=-122.24,
-			zoom=10,
+			zoom=9,
 			pitch=50,
 		),
 		layers=[
@@ -369,102 +493,9 @@ def showLoopDetectorMap():
 		],
  	))
 
-def showCOVID19():
-	st.markdown("## Impact of COVID-19")
-
-	sdate = datetime.datetime(2020, 2, 28)
-	edate = datetime.datetime(2020, 3, 25)
-	df_DailyIndex = getTrafficIndexLoss(sdate, edate)
-	df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
-	
-
-	df_DailyIndex = df_DailyIndex[['date', 'gp_loss', 'hov_loss']]
-	
-	# get COVID info
-	df_COVID19 = getCOVID19Info()
-	df_COVID19['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
-
-	data = pd.merge(df_DailyIndex, df_COVID19, on='date')
-	# data['date'] = data['date'].dt.date
-
-	# st.write(data)
-
-	lw = 2  # line width
 
 
 
-
-	# Create figure with secondary y-axis
-	fig = make_subplots(specs=[[{"secondary_y": True}]])
-
-	# Add traces for axis-2
-	fig.add_trace(go.Scatter(x=data['date'], y=data['gp_loss'],
-							 mode='lines', line=dict(dash='dot', width=lw, color='#1f77b4'),
-							 name='Index - GP',
-							 legendgroup='group2'),
-					secondary_y=False)
-	fig.add_trace(go.Scatter(x=data['date'], y=data['hov_loss'],
-							 mode='lines', line=dict(dash='dot', width=lw, color='#2ca02c'),
-							 name='Index - HOV',
-							 legendgroup='group2'),
-					secondary_y=False)
-
-	# Add traces for axis-1
-	
-	fig.add_trace(go.Scatter(x=data['date'], y=data['confirmed case'],
-							 mode='lines+markers', line=dict(dash='solid', width=lw, color='red'),
-							 name='Confirmed Cases',
-							 legendgroup='group1'),
-					secondary_y=True)
-	fig.add_trace(go.Scatter(x=data['date'], y=data['new case'],
-							 mode='lines+markers', line=dict(dash='solid', width=lw, color='orange'),
-							 name='New Cases',
-							 legendgroup='group1'),
-					secondary_y=True)
-	fig.add_trace(go.Scatter(x=data['date'], y=data['total death'],
-							 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
-							 name='Total Death',
-							 legendgroup='group1'),
-					secondary_y=True)
-	
-
-	fig.update_traces(textposition='top center')
-	# Set x-axis title
-	fig.update_xaxes(title_text="Date")
-	# Set y-axes titles
-	fig.update_yaxes(title_text="Daily Traffic Index", 
-						showline=True, 
-						linecolor='rgb(204, 204, 204)', 
-						linewidth=2, 
-						showticklabels=True, 
-						ticks='outside', 
-						secondary_y=False)
-	fig.update_yaxes(title_text="COVID-19 Case Amount", 
-						showline=True, 
-						linecolor='rgb(204, 204, 204)', 
-						linewidth=2, 
-						showticklabels=True, 
-						ticks='outside', 
-						secondary_y=True)
-	fig.update_layout(xaxis=dict(
-						    showline=True,
-						    showgrid=False,
-						    showticklabels=True,
-						    linecolor='rgb(204, 204, 204)',
-						    linewidth=2,
-						    ticks='outside',
-						    tickfont=dict(
-						        family='Arial',
-						        size=12,
-						        color='rgb(82, 82, 82)',
-						    ),
-						),
-						legend=dict(x= 0.3, y=1.0, orientation="h"),
-					  	margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), 
-					  	width = 700, 
-					  	height = 450,
-					  	plot_bgcolor='white')
-	st.plotly_chart(fig)
 
 
 #####################################################
@@ -491,22 +522,23 @@ def main():
 		showTrafficIndex()
 	elif app_mode == "Impact of COVID-19":
 		showCOVID19()
-	# elif app_mode == "Daily Index":
-	# 	showDailyIndex()
 	elif app_mode == "Other Traffic Metrics":
-		showRushHourVolume()
+		showOtherMetrics()
 
 
 	st.sidebar.title("About")
 	st.sidebar.info(
-	        "This an open source project developed and maintained by the "
-	        "Artificial Intelligence GROUP of [UW STAR Lab](http://www.uwstarlab.org/), University of Washington. "
-	        "If you want to contribute to this project, "
-	        "please contact the Project Initiator:"
-	        " &nbsp;"
-	        "[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) ([yinhai@uw.edu](mailto:yinhai@uw.edu))."
-	        )
-
+        "This an open source project developed and maintained by the "
+        "Artificial Intelligence GROUP in the [Smart Transportation Application and Research Lab (STAR Lab)](http://www.uwstarlab.org/) at the University of Washington. "
+	        
+	)
+	st.sidebar.title("Contribute")
+	st.sidebar.info(
+		"If you want to contribute to this project or collaborate with us, "
+		"please contact the Project Initiator:"
+        " &nbsp;"
+        "[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) ([yinhai@uw.edu](mailto:yinhai@uw.edu))."
+	)
 	image_starlab = Image.open('images/STARLab.png')
 	st.sidebar.image(image_starlab, width = 240, use_column_width=False)
 
