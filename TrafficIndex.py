@@ -35,7 +35,6 @@ def getLoopDetectorLocation():
 
 	return pd.DataFrame(SQL_Query)
 
-@st.cache
 def getTrafficIndex(date):
 	conn = getDatabaseConnection()
 
@@ -222,19 +221,22 @@ def showTrafficIndex():
 
 	st.markdown("In this section, we provide the traffic index over a period. Please pick the starting and ending date. "
 		"You can check or uncheck the checkbox in the left panel to adjuect the displayed information.")
-	sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
-	edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
-	st.write('From ',sdate, ' to ', edate,':')
+	# sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	# edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
+	# st.write('From ',sdate, ' to ', edate,':')
 	
 
 	########################
 	# Daily Traffic Index #
 	########################
 	if daily_Index:
-
 		st.markdown("## Daily Traffic Index")
 
-		df_DailyIndex = getDailyIndex(sdate, edate)
+		sdate_DI = st.date_input('Pick a start date for Daily Traffic Index', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+		edate_DI = st.date_input('Pick an end date for Daily Traffic Index' , value = datetime.datetime.now().date())
+		st.write('From ',sdate_DI, ' to ', edate_DI,':')
+
+		df_DailyIndex = getDailyIndex(sdate_DI, edate_DI)
 		df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
 		df_DailyIndex['date'] = df_DailyIndex['date'].dt.date
 
@@ -260,7 +262,11 @@ def showTrafficIndex():
 
 		st.markdown("## Traffic Index per Minute")
 
-		df_TI_range = getTrafficIndexMultiDays(sdate, edate)
+		sdate_MI = st.date_input('Pick a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=7)))
+		edate_MI = st.date_input('Pick an end date:', value = datetime.datetime.now().date())
+		st.write('From ',sdate_MI, ' to ', edate_MI,':')
+
+		df_TI_range = getTrafficIndexMultiDays(sdate_MI, edate_MI)
 
 		sampling_interval = 1
 		data = df_TI_range.loc[::sampling_interval, ['time', 'trafficindex_gp', 'trafficindex_hov']]
@@ -284,10 +290,13 @@ def showTrafficIndex():
 	# Minute Traffic Index 
 	########################
 	if tablular_Data:
-
 		st.markdown("## Traffic Index Tablular Data")
 
-		df_TI_range = getTrafficIndexMultiDays(sdate, edate)
+		sdate_TD = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=1)))
+		edate_TD = st.date_input('Pick an end date', value = datetime.datetime.now().date())
+		st.write('From ',sdate_TD, ' to ', edate_TD,':')
+
+		df_TI_range = getTrafficIndexMultiDays(sdate_TD, edate_TD)
 		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
 		st.write(df_TI_range[dataFields])
 
