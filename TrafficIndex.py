@@ -297,7 +297,7 @@ def showCOVID19():
 
 	st.markdown("## COVID-19 in Washington State")
 	st.markdown("Since the early March 2020, the coronavirus start to outbreak in the US. "
-				"Except for affecting the public healthy, COVID-19 also has great impact on public transportaion, "
+				"Besides affecting public health, COVID-19 also has great impact on public transportation, "
 				"especially when public business and public agencies shut down. Representative responses are listed as below: [\[source\]](https://en.wikipedia.org/wiki/2020_coronavirus_pandemic_in_Washington_(state))")
 	st.markdown("* **March 6**: Major tech companies ask Seattle employees to work from home. Amazon and Facebook have shut down individual offices as well. [\[link\]](https://www.theverge.com/2020/3/5/21166686/coronavirus-amazon-google-facebook-microsoft-twitter-seattle-staff-remote-work)\n"
 				"* **March 9**: UW suspends on-site classes and finals. [\[link\]](https://www.washington.edu/coronavirus/2020/03/06/beginning-march-9-classes-and-finals-will-not-be-held-in-person-message-to-students/) \n"
