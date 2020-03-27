@@ -1,0 +1,28 @@
+date,new case,confirmed case,total death,response,link
+2/28/2020,1,1,0,,
+2/29/2020,6,7,1,,
+3/1/2020,6,13,2,,
+3/2/2020,5,18,6,,
+3/3/2020,10,28,9,,
+3/4/2020,11,39,10,,
+3/5/2020,31,70,10,,
+3/6/2020,13,83,11,Major tech companies ask Seattle employees to work from home. Amazon and Facebook have shut down individual offices as well.,https://www.theverge.com/2020/3/5/21166686/coronavirus-amazon-google-facebook-microsoft-twitter-seattle-staff-remote-work
+3/7/2020,19,102,16,,
+3/8/2020,34,136,18,,
+3/9/2020,26,162,22,UW suspends on-site classes and finals.,https://www.washington.edu/coronavirus/2020/03/06/beginning-march-9-classes-and-finals-will-not-be-held-in-person-message-to-students/
+3/10/2020,105,267,24,,
+3/11/2020,99,366,29,,
+3/12/2020,91,457,31,,
+3/13/2020,111,568,37,"Gov. Inslee announces statewide school closures, expansion of limits on large gatherings",https://medium.com/wagovernor/inslee-announces-statewide-school-closures-expansion-of-limits-on-large-gatherings-63d442111438
+3/14/2020,75,643,40,,
+3/15/2020,126,769,42,,
+3/16/2020,135,904,48,"Gov. Inslee announces statewide shutdown of restaurants, bars and expanded social gathering limits",https://www.governor.wa.gov/news-media/inslee-statement-statewide-shutdown-restaurants-bars-and-limits-size-gatherings-expanded
+3/17/2020,108,1012,52,,
+3/18/2020,175,1187,66,,
+3/19/2020,189,1376,74,,
+3/20/2020,148,1524,83,,
+3/21/2020,269,1793,94,,
+3/22/2020,203,1996,95,,
+3/23/2020,225,2221,110,"Gov. Inslee announces ""Stay Home, Stay Healthy"" order",https://www.governor.wa.gov/news-media/inslee-announces-stay-home-stay-healthy%C2%A0order
+3/24/2020,248,2469,123,,
+3/25/2020,111,2580,132,,
