@@ -1,6 +1,9 @@
 # Traffic-Index
 Network-wide Freeway Traffic Index in Seattle Area
 
+![alt text](https://github.com/AI-Group-STAR-Lab-UW/Traffic-Index/images/TrafficIndex.PNG "Traffic Index Demo")
+
+
 ## How to run:
 * install streamlit package
 ```python
