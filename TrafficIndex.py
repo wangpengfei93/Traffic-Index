@@ -11,7 +11,8 @@ import pydeck as pdk
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 from PIL import Image
-
+from requests_html import HTMLSession
+import locale
 
 #####################################################
 # SQL query functions
@@ -301,6 +302,40 @@ def showTrafficIndex():
 		st.write(df_TI_range[dataFields])
 
 
+def get_data_from_sel(url, sel):
+    session = HTMLSession()
+    r = session.get(url)
+    mylist = []
+    try:
+        results = r.html.find(sel)
+        for result in results:
+            mytext = result.text
+            mylist.append(mytext)
+        return mylist
+    except:
+        return None
+
+
+def get_data_from_wikipedia(url):
+	sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
+	sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
+
+	date_list = get_data_from_sel(url, sel_date)
+	del date_list[len(date_list) - 1]
+	del date_list[0]
+	cases_list_0 = get_data_from_sel(url, sel_cases)
+	locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+	cases_list = [];
+	for n in cases_list_0:
+		cases_list.append(locale.atoi(n))
+
+	df = pd.DataFrame(date_list, columns=['date'])
+	df['confirmed case'] = cases_list
+	df['new case'] = df['confirmed case'] - df['confirmed case'].shift(1)
+	df.loc[0, 'new case'] = 0
+	return df
+
+
 def showCOVID19():
 	
 
@@ -326,6 +361,13 @@ def showCOVID19():
 	sdate = datetime.datetime(2020, 2, 28)
 	edate = datetime.datetime(2020, 3, 25)
 	#################################################################
+	# get COVID info
+	url = 'https://en.wikipedia.org/wiki/Template:2019%E2%80%9320_coronavirus_pandemic_data/United_States/Washington_State_medical_cases_chart'
+	df_COVID19 = get_data_from_wikipedia(url)
+	df_COVID19['date'] = df_COVID19['date'].astype('datetime64[ns]')
+	
+	sdate = datetime.datetime(2020, 2, 28)
+	edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
 	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
 	df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
@@ -339,10 +381,6 @@ def showCOVID19():
 	# df_epv['date'] = df_epv['date'].astype('datetime64[ns]')
 	# df_epv.rename(columns = {'avg_vol_gp':'Evening_GP', 'avg_vol_hov':'Evening_HOV'}, inplace = True) 
 	# df_pv = pd.merge(df_mpv, df_epv, on='date')
-	
-	# get COVID info
-	df_COVID19 = getCOVID19Info()
-	df_COVID19['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
 	
 	data = pd.merge(df_DailyIndex, df_COVID19, on='date')
 
@@ -374,11 +412,11 @@ def showCOVID19():
 							 name='New Cases',
 							 legendgroup='group1'),
 					secondary_y=True)
-	fig.add_trace(go.Scatter(x=data['date'], y=data['total death'],
-							 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
-							 name='Total Death',
-							 legendgroup='group1'),
-					secondary_y=True)
+	#fig.add_trace(go.Scatter(x=data['date'], y=data['total death'],
+	#						 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
+	#						 name='Total Death',
+	#						 legendgroup='group1'),
+	#				secondary_y=True)
 	
 
 	fig.update_traces(textposition='top center')
@@ -394,7 +432,7 @@ def showCOVID19():
 						ticks='outside', 
 						secondary_y=False)
 	fig.update_yaxes(title_text="COVID-19 Case Amount",
-						range=[0, 3000], 
+						range=[0, 8000], 
 						showline=True, 
 						linecolor='rgb(204, 204, 204)', 
 						linewidth=2, 
