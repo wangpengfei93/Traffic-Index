@@ -132,7 +132,7 @@ def IntroduceTrafficIndex():
 	# Content #
 	###########
 	st.markdown("## Introduction to Traffic Index")
-	st.markdown("Traffic index can help us eaisly and intuitively understand the overall performance of urban traffic network. "
+	st.markdown("Traffic index can help us easily and intuitively understand the overall performance of urban traffic network. "
 				"In this website, we provide a traffic index to quantify the overall traffic condition in Seattle area. "
 				"With this website, you can view "
 				"\n * Traffic index with different temporal resolutions, ranging from one minute to one day. "
@@ -178,17 +178,17 @@ def IntroduceTrafficIndex():
 
 	#################################################################
 	st.markdown("## Data Source")
-	st.markdown("The traffic index is calcualted based on the data collected from more than 44800 inductive loop detector deployed on the freeways in Seattle area, "
+	st.markdown("The traffic index is calculated based on the data collected from more than 44800 inductive loop detector deployed on the freeways in Seattle area, "
 				"including I-5, I-90, I-405, SR-520, etc. The raw data comes from Washington State Department of Transportation (WSDOT). "
-				"Representative decectors are shown in the following map. ")
+				"Representative detectors are shown in the following map. ")
 	showLoopDetectorMap()
 
 	#################################################################
 	st.markdown("## Traffic Index Calculation")
 	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
 				"Each detector's meta data, including detector category, route, milepost, director, direction, address, etc., are also available. "
-				"Based on the consecutive detectors' location information, we seperate the freeways into segments, "
-				"each of which only contains one loop detector per lane. We a road segment's length is the corresponding detector's covered length. "
+				"Based on the consecutive detectors' location information, we separate the freeways into segments, "
+				"each of which only contains one loop detector per lane. We consider a road segment's length is the corresponding detector's covered length. "
 				"The time interval of the data is one-minute. ")
 	st.markdown("The **Traffic Index** (**TI**) at time $t$ is calculated using the following equation:")
 	st.latex(r'''
@@ -544,8 +544,8 @@ def main():
 	st.sidebar.title("Contribute")
 	st.sidebar.info(
 		"If you want to contribute to this project or collaborate with us, "
-		"please contact the Project Initiator:"
-        " &nbsp;"
+		"please contact the Project Initiator: 
+		"
         "[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) ([yinhai@uw.edu](mailto:yinhai@uw.edu))."
 	)
 	image_starlab = Image.open('images/STARLab.png')
