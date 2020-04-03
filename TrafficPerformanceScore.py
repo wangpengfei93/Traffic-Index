@@ -42,11 +42,11 @@ def getTrafficIndex(date):
 	SQL_Query = pd.read_sql_query(
 	'''SELECT DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) as [time]
 	      , AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
-	      ,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
-	      ,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
-	      ,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
-	      ,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
-	      ,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
+	      , AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
+	      , AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
+	      , AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
+	      , AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
+	      , AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
 	  FROM [RealTimeLoopData].[dbo].[TrafficIndex]
 	  WHERE CAST([time] AS DATE) = ?
 	  GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) 
@@ -62,11 +62,11 @@ def getTrafficIndexMultiDays(sdate, edate):
     SQL_Query = pd.read_sql_query(
     '''SELECT DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) as [time]
 	      , AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
-	      ,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
-	      ,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
-	      ,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
-	      ,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
-	      ,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
+	      , AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
+	      , AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
+	      , AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
+	      , AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
+	      , AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
 	  FROM [RealTimeLoopData].[dbo].[TrafficIndex]
 	  WHERE time between ? and ?
 	  GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) 
@@ -146,27 +146,31 @@ def IntroduceTrafficIndex():
 	###########
 	# st.sidebar.markdown("## Components")
 	# st.sidebar.checkbox("Data Course")
-	# st.sidebar.checkbox("Traffic Index Caculation")
+	# st.sidebar.checkbox("Traffic Performance Score Caculation")
 	###########
 	# Content #
 	###########
-	st.markdown("# Traffic Index in Seattle Area")
-	st.markdown("## Introduction to Traffic Index")
-	st.markdown("Traffic Index (TI) can intuitively indicate the overall performance of urban traffic network. "
-				"In this website, the TI is calculated and visualized to quantify the overall traffic condition in Seattle area. "
+	st.markdown("# Traffic Performance Score in Seattle Area")
+	st.markdown("## Introduction to Traffic Performance Score")
+	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic network. "
+				"In this website, the TPSis calculated and visualized to quantify the overall traffic condition in Seattle area. "
 				"With this website, you can view "
-				"\n * The TI with different temporal resolutions, ranging from one minute to one day. "
-				"\n * The TI of general purpose (GP) and HOV lanes. "
-				"\n * Impact of COVID-19 on urban traffic reflected by the traffic index. "
+				"\n * The TPS with different temporal resolutions, ranging from one minute to one day. "
+				"\n * The TPS of general purpose (GP) and HOV lanes. "
+				"\n * Impact of COVID-19 on urban traffic reflected by the Traffic Performance Score. "
 				"\n * Other traffic performance metrics. " )
 	
 	st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
 	
 	#################################################################
-	st.markdown("## Today's Traffic Index")
+	st.markdown("## Today's Traffic Performance Score")
 	# date = st.date_input('Please select a date', datetime.datetime.now().date())
 	date = datetime.datetime.now().date()
 	df_TI = getTrafficIndex(datetime.datetime.now().date())
+	df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'] * 100
+	# df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'].astype('int64')
+	df_TI['trafficindex_hov'] = df_TI['trafficindex_hov'] * 100
+	# df_TI['trafficindex_hov'] = df_TI['trafficindex_hov'].astype('int64')
 
 	# df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'] * 65
 	# st.line_chart(df_TI[['trafficindex_gp', 'avg_spd_gp']])
@@ -184,13 +188,13 @@ def IntroduceTrafficIndex():
 							 mode='lines', line=dict(dash='solid', width=lw),
 							 name='HOV lane'))
 
-	fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Index',
+	fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Performance Score (%)',
 					  legend = dict(x=.01, y=0.05),
 					  margin = go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
 
 	#fig.update_yaxes(range=[0, 1.1])
 
-	# st.write('Traffic index of (', date, '):')
+	# st.write('Traffic Performance Score of (', date, '):')
 
 	st.plotly_chart(fig)
 
@@ -199,28 +203,28 @@ def IntroduceTrafficIndex():
 
 	#################################################################
 	st.markdown("## Data Source")
-	st.markdown("The TI is calculated based on data collected from more than 44800 inductive loop detectors deployed on freeways in Seattle, WA area. "
+	st.markdown("The TPS is calculated based on data collected from more than 44800 inductive loop detectors deployed on freeways in Seattle, WA area. "
 				"Freeways include: I-5, I-90, I-405, SR-520, and I-167. The raw data comes from Washington State Department of Transportation (WSDOT). "
 				"Representative detectors are shown in the following map. ")
 	showLoopDetectorMap()
 
 	#################################################################
-	st.markdown("## Traffic Index Calculation")
+	st.markdown("## Traffic Performance Score Calculation")
 	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
 				"Each detector's meta data includes detector category, route, milepost, director, direction, address. "
 				"Based on the consecutive detectors' location information, we separate the freeways into segments, "
 				"each of which only contains one loop detector per lane. We consider a road segment's length is the corresponding detector's covered length. "
 				"The time interval of the data is one-minute. ")
-	st.markdown("The **Traffic Index** (**TI**) at time $t$ is calculated using the following equation:")
+	st.markdown("The **Traffic Performance Score** (**TPS**) at time $t$ is calculated using the following equation:")
 	st.latex(r'''
-		\text{TI}_t = \frac{\displaystyle\sum_{i=1}^n S_t^i * V_t^i * D_t^i }{ \displaystyle\sum_{i=1}^n V_t^i * D_t^i * 65 }
+		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n S_t^i * V_t^i * D_t^i }{ \displaystyle\sum_{i=1}^n V_t^i * D_t^i * 65 } * 100\%
 		''')
 	st.markdown("where $S_t^i$, $V_t^i$, and $D_t^i$ represent the **S**peed, **V**olume, covered **D**istance "
 				"of each road segment $i$ at time $t$, respectively. "
 				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
 				"The unit of covered distance is mile.")
-	st.markdown("In this way, the **TI** is a value ranges from 0 to 1.0 ($TI \in [0,1.0]$). "
-				"The closer to one the **TI** is, the better the overall network-wide traffic condition is. ")
+	st.markdown("In this way, the **TPS** is a value ranges from 0 to 1.0 ($TPS \in [0,1.0]$). "
+				"The closer to one the **TPS** is, the better the overall network-wide traffic condition is. ")
 
 
 	
@@ -232,16 +236,16 @@ def showTrafficIndex():
 	###########
 	st.sidebar.markdown("## Components")
 
-	# index = st.sidebar.radio( "Display:", ("Daily Index", "Traffic Index per Minute", "Tabular Data"))
+	# index = st.sidebar.radio( "Display:", ("Daily Index", "Traffic Performance Score per Minute", "Tabular Data"))
 	# daily_Index = st.sidebar.checkbox("Daily Index", value = True)
-	# minute_Index = st.sidebar.checkbox("Traffic Index per Minute")
+	# minute_Index = st.sidebar.checkbox("Traffic Performance Score per Minute")
 	# tablular_Data = st.sidebar.checkbox("Tabular Data")
 	daily_Index, five_minute_Index, tablular_Data = True, True, True
 	########################
 	# main content
 	########################
-	st.markdown("# Traffic Index")
-	st.markdown("In this section, the TI is provided based on selected start and end dates. ")
+	st.markdown("# Traffic Performance Score")
+	st.markdown("In this section, the TPS is provided based on selected start and end dates. ")
 		# "You can check or uncheck the checkbox in the left panel to adjuect the displayed information.")
 	# sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 	# edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
@@ -249,19 +253,24 @@ def showTrafficIndex():
 	
 
 	########################
-	# Daily Traffic Index #
+	# Daily Traffic Performance Score #
 	########################
 
 	if daily_Index:
-		st.markdown("## Daily Traffic Index")
+		st.markdown("## Daily Traffic Performance Score")
 
-		sdate_DI = st.date_input('Select a start date for Daily Traffic Index', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
-		edate_DI = st.date_input('Select an end date for Daily Traffic Index' , value = datetime.datetime.now().date())
+		sdate_DI = st.date_input('Select a start date for Daily Traffic Performance Score', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+		edate_DI = st.date_input('Select an end date for Daily Traffic Performance Score' , value = datetime.datetime.now().date())
 		st.write('From ',sdate_DI, ' to ', edate_DI,':')
 
 		df_DailyIndex = getDailyIndex(sdate_DI, edate_DI)
 		df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
 		df_DailyIndex['date'] = df_DailyIndex['date'].dt.date
+
+		df_DailyIndex['daily_index_gp'] = df_DailyIndex['daily_index_gp'] * 100
+		# df_DailyIndex['daily_index_gp'] = df_DailyIndex['daily_index_gp'].astype('int64')
+		df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'] * 100
+		# df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'].astype('int64')
 
 		data = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
 		lw = 2  # line width
@@ -273,23 +282,27 @@ def showTrafficIndex():
 		fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_hov'],
 								 mode='lines', line=dict(dash='solid', width=lw),
 								 name='HOV lane'))
-		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Index',
+		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Performance Score (%)',
 						  legend=dict(x=.01, y=0.05),
 						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
 		st.plotly_chart(fig)
 
 	########################
-	# Minute Traffic Index 
+	# Minute Traffic Performance Score 
 	########################
 	if five_minute_Index:
 
-		st.markdown("## Traffic Index per 5-Minute")
+		st.markdown("## Traffic Performance Score per 5-Minute")
 
 		sdate_MI = st.date_input('Pick a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 		edate_MI = st.date_input('Pick an end date:', value = datetime.datetime.now().date())
 		st.write('From ',sdate_MI, ' to ', edate_MI,':')
 
 		df_TI_range = getTrafficIndexMultiDays(sdate_MI, edate_MI)
+		df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'] * 100
+		# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
+		df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'] * 100
+		# df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'].astype('int64')
 
 		sampling_interval = 1
 		data = df_TI_range.loc[::sampling_interval, ['time', 'trafficindex_gp', 'trafficindex_hov']]
@@ -302,7 +315,7 @@ def showTrafficIndex():
 		fig.add_trace(go.Scatter(x=data['time'], y=data['trafficindex_hov'],
 								 mode='lines', line=dict(dash='solid', width=lw),
 								 name='HOV lane'))
-		fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Index',
+		fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Performance Score (%)',
 						  legend=dict(x=.01, y=0.05),
 						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
 		#fig.update_yaxes(range=[0, 1.1])
@@ -310,16 +323,20 @@ def showTrafficIndex():
 
 		
 	########################
-	# Minute Traffic Index 
+	# Minute Traffic Performance Score 
 	########################
 	if tablular_Data:
-		st.markdown("## Traffic Index Tablular Data")
+		st.markdown("## Traffic Performance Score Tablular Data")
 
 		sdate_TD = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=1)))
 		edate_TD = st.date_input('Pick an end date', value = datetime.datetime.now().date())
 		st.write('From ',sdate_TD, ' to ', edate_TD,':')
 
 		df_TI_range = getTrafficIndexMultiDays(sdate_TD, edate_TD)
+		df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'] * 100
+		# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
+		df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'] * 100
+		# df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'].astype('int64')
 		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
 		st.write(df_TI_range[dataFields])
 
@@ -387,13 +404,18 @@ def showCOVID19():
 	url = 'https://en.wikipedia.org/wiki/Template:2019%E2%80%9320_coronavirus_pandemic_data/United_States/Washington_State_medical_cases_chart'
 	df_COVID19 = get_data_from_wikipedia(url)
 	df_COVID19['date'] = df_COVID19['date'].astype('datetime64[ns]')
-	
+	# st.write(df_COVID19)
 	sdate = datetime.datetime(2020, 2, 28)
 	edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
 	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
 	df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
 	df_DailyIndex = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
+
+	df_DailyIndex['daily_index_gp'] = df_DailyIndex['daily_index_gp'] * 100
+	# df_DailyIndex['daily_index_gp'] = df_DailyIndex['daily_index_gp'].astype('int64')
+	df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'] * 100
+	# df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'].astype('int64')
 
 	# # peak volume
 	# df_mpv = getMorningPeakVolume(sdate, edate)
@@ -436,19 +458,19 @@ def showCOVID19():
 							 name='New Cases',
 							 legendgroup='group1'),
 					secondary_y=True)
-	#fig.add_trace(go.Scatter(x=data['date'], y=data['total death'],
-	#						 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
-	#						 name='Total Death',
-	#						 legendgroup='group1'),
-	#				secondary_y=True)
+	# fig.add_trace(go.Scatter(x=data['date'], y=data['total death'],
+	# 						 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
+	# 						 name='Total Death',
+	# 						 legendgroup='group1'),
+	# 				secondary_y=True)
 	
 
 	fig.update_traces(textposition='top center')
 	# Set x-axis title
 	fig.update_xaxes(title_text="Date")
 	# Set y-axes titles
-	fig.update_yaxes(title_text="Daily Traffic Index", 
-						range=[0.7, 1], 
+	fig.update_yaxes(title_text="Daily Traffic Performance Score (%)", 
+						range=[70, 100], 
 						showline=True, 
 						linecolor='rgb(204, 204, 204)', 
 						linewidth=2, 
@@ -582,15 +604,15 @@ def main():
         """
 	st.markdown(hide_menu_style, unsafe_allow_html=True)
 
-	# st.title("Traffic Index in Seattle Area")
+	# st.title("Traffic Performance Score in Seattle Area")
 
-	st.sidebar.title("Traffic Index")
+	st.sidebar.title("Traffic Performance Score")
 	app_mode = st.sidebar.radio("Navitation",
-	        ["Home", "Traffic Index", "Impact of COVID-19", "Other Traffic Metrics"])
+	        ["Home", "Traffic Performance Score", "Impact of COVID-19", "Other Traffic Metrics"])
 	# st.sidebar.markdown("[![this is an image link](./images/STARLab.png)](https://streamlit.io)")
 	if  app_mode == "Home":
 		IntroduceTrafficIndex()
-	elif app_mode == "Traffic Index":
+	elif app_mode == "Traffic Performance Score":
 		showTrafficIndex()
 	elif app_mode == "Impact of COVID-19":
 		showCOVID19()
