@@ -152,8 +152,8 @@ def IntroduceTrafficIndex():
 	###########
 	st.markdown("# Traffic Performance Score in Seattle Area")
 	st.markdown("## Introduction to Traffic Performance Score")
-	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic network. "
-				"In this website, the TPSis calculated and visualized to quantify the overall traffic condition in Seattle area. "
+	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
+				"In this website, the TPSis calculated and visualized to quantify the overall traffic condition in the Seattle area. "
 				"With this website, you can view "
 				"\n * The TPS with different temporal resolutions, ranging from one minute to one day. "
 				"\n * The TPS of general purpose (GP) and HOV lanes. "
@@ -167,6 +167,10 @@ def IntroduceTrafficIndex():
 	# date = st.date_input('Please select a date', datetime.datetime.now().date())
 	date = datetime.datetime.now().date()
 	df_TI = getTrafficIndex(datetime.datetime.now().date())
+	
+	# remove outliers from HOV traffic index
+	df_TI.loc[df_TI['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+
 	df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'] * 100
 	# df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'].astype('int64')
 	df_TI['trafficindex_hov'] = df_TI['trafficindex_hov'] * 100
@@ -204,7 +208,7 @@ def IntroduceTrafficIndex():
 	#################################################################
 	st.markdown("## Data Source")
 	st.markdown("The TPS is calculated based on data collected from more than 44800 inductive loop detectors deployed on freeways in Seattle, WA area. "
-				"Freeways include: I-5, I-90, I-405, SR-520, and I-167. The raw data comes from Washington State Department of Transportation (WSDOT). "
+				"Freeways include: I-5, I-90, I-99, I-167, I-405, and SR-520. The raw data comes from Washington State Department of Transportation (WSDOT). "
 				"Representative detectors are shown in the following map. ")
 	showLoopDetectorMap()
 
@@ -234,7 +238,7 @@ def showTrafficIndex():
 	###########
 	# Sidebar #
 	###########
-	st.sidebar.markdown("## Components")
+	# st.sidebar.markdown("## Components")
 
 	# index = st.sidebar.radio( "Display:", ("Daily Index", "Traffic Performance Score per Minute", "Tabular Data"))
 	# daily_Index = st.sidebar.checkbox("Daily Index", value = True)
@@ -264,6 +268,7 @@ def showTrafficIndex():
 		st.write('From ',sdate_DI, ' to ', edate_DI,':')
 
 		df_DailyIndex = getDailyIndex(sdate_DI, edate_DI)
+
 		df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
 		df_DailyIndex['date'] = df_DailyIndex['date'].dt.date
 
@@ -299,6 +304,10 @@ def showTrafficIndex():
 		st.write('From ',sdate_MI, ' to ', edate_MI,':')
 
 		df_TI_range = getTrafficIndexMultiDays(sdate_MI, edate_MI)
+		
+		# remove outliers from HOV traffic index
+		df_TI_range.loc[df_TI_range['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+
 		df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'] * 100
 		# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
 		df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'] * 100
@@ -333,6 +342,10 @@ def showTrafficIndex():
 		st.write('From ',sdate_TD, ' to ', edate_TD,':')
 
 		df_TI_range = getTrafficIndexMultiDays(sdate_TD, edate_TD)
+
+		# remove outliers from HOV traffic index
+		df_TI_range.loc[df_TI_range['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+
 		df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'] * 100
 		# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
 		df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'] * 100
@@ -409,6 +422,10 @@ def showCOVID19():
 	edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
 	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
+
+	# # remove outliers from HOV traffic index
+	# df_DailyIndex.loc[df_DailyIndex['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+
 	df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
 	df_DailyIndex = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
 
