@@ -368,10 +368,11 @@ def get_data_from_sel(url, sel):
         return None
 
 
-def get_data_from_wikipedia(url):
+def update_and_get_covid19_info(url):
 	sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
 	sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
-
+	
+	# get date_list and cases_list from Wikepedia webpage
 	date_list = get_data_from_sel(url, sel_date)
 	del date_list[len(date_list) - 1]
 	del date_list[0]
@@ -380,13 +381,24 @@ def get_data_from_wikipedia(url):
 	cases_list = [];
 	for n in cases_list_0:
 		cases_list.append(locale.atoi(n))
+	
+	# formulate a dataframe containing date, confirmed case, and new case
+	df_web = pd.DataFrame(date_list, columns=['date'])
+	df_web['confirmed case'] = cases_list
+	df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
+	df_web.loc[0, 'new case'] = 0
+	df_web['date'] = df_web['date'].astype('datetime64[ns]')
+	
+	# update df_csv to df_new, using df_web
+	df_csv = getCOVID19Info()
+	df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
+	df_new = df_csv.append(df_web, ignore_index=True)
+	df_new = df_new.drop_duplicates(subset=['date'], keep='first')
 
-	df = pd.DataFrame(date_list, columns=['date'])
-	df['confirmed case'] = cases_list
-	df['new case'] = df['confirmed case'] - df['confirmed case'].shift(1)
-	df.loc[0, 'new case'] = 0
-	return df
+	if len(df_new) > len(df_csv):
+		df_new.to_csv("Washington_COVID_Cases.csv", mode='w', header=True, index=False)
 
+	return getCOVID19Info()
 
 def showCOVID19():
 	
@@ -410,12 +422,11 @@ def showCOVID19():
 	st.markdown("This section shows the impact of COVID-19 on urban traffic. "
 				"In the following chart, the trends of traffic indices and the coronavirus cases are displayed together.")
 	
-	sdate = datetime.datetime(2020, 2, 28)
-	edate = datetime.datetime(2020, 3, 25)
+
 	#################################################################
-	# get COVID info
+	# get COVID info and update csv
 	url = 'https://en.wikipedia.org/wiki/Template:2019%E2%80%9320_coronavirus_pandemic_data/United_States/Washington_State_medical_cases_chart'
-	df_COVID19 = get_data_from_wikipedia(url)
+	df_COVID19 = update_and_get_covid19_info(url)
 	df_COVID19['date'] = df_COVID19['date'].astype('datetime64[ns]')
 	# st.write(df_COVID19)
 	sdate = datetime.datetime(2020, 2, 28)
