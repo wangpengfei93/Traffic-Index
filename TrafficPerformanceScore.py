@@ -13,7 +13,9 @@ from plotly.subplots import make_subplots
 from PIL import Image
 from requests_html import HTMLSession
 import locale
+import folium
 
+from Visualization import GenerateGeo
 #####################################################
 # SQL query functions
 #####################################################
@@ -135,6 +137,24 @@ def getSegmentTPS_5Min(sdate, edate, segmentID):
 		''', conn, params = [sdate, edate, segmentID])
 	return pd.DataFrame(SQL_Query)
 
+def getSegmentTPS_5Min(sdate, edate):
+	conn = getDatabaseConnection()
+	SQL_Query = pd.read_sql_query(
+	'''	SELECT DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) as [time]
+				,[segmentID]
+		      	,AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
+		      	,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
+		      	,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
+		      	,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
+		      	,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
+		      	,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
+		FROM [RealTimeLoopData].[dbo].[SegmentTrafficIndex]
+		WHERE [time] BETWEEN ? and ?
+		GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0),[segmentID]
+		ORDER BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0),[segmentID]
+		''', conn, params = [sdate, edate])
+	return pd.DataFrame(SQL_Query)
+
 
 def getMorningPeakVolume(sdate, edate):
     conn = getDatabaseConnection()
@@ -186,7 +206,7 @@ def IntroduceTrafficIndex():
 	st.markdown("# Traffic Performance Score in Seattle Area")
 	st.markdown("## Introduction to Traffic Performance Score")
 	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
-				"In this website, the TPSis calculated and visualized to quantify the overall traffic condition in the Seattle area. "
+				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Seattle area. "
 				"With this website, you can view "
 				"\n * The TPS with different temporal resolutions, ranging from one minute to one day. "
 				"\n * The TPS of general purpose (GP) and HOV lanes. "
@@ -420,6 +440,38 @@ def get_data_from_wikipedia(url):
 
 def showSgementTPS():
 	st.markdown("# Segment-based Traffic Preformance Score")
+
+	date = st.date_input('Pick an end date', value = datetime.datetime.now().date())
+	
+	
+	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
+	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
+	# st.write(datatime2)
+
+	df_SegTPS_5Min = getSegmentTPS_5Min(datatime1, datatime2)
+	df_SegTPS_5Min.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+	# time = st.time_input('Pick an end date', value = datetime.datetime.now().time())
+	# time = time.replace(second=0, microsecond=0)
+	# dt = datetime.datetime.combine(date, time)
+	# st.write(dt)
+	# st.write(df_SegTPS_5Min)
+	# st.write(df_SegTPS_5Min[df_SegTPS_5Min['time'] == dt])
+
+	dt = st.selectbox(
+	    'Select a time',
+	    df_SegTPS_5Min['time'].astype(str).unique().tolist()
+	)
+
+	data = df_SegTPS_5Min[df_SegTPS_5Min['time'] == dt]
+	# st.write(data)
+	GenerateGeo(data)
+	# map.save('index.html')
+	# # st.write(m._repr_html_(), unsafe_allow_html=True)
+	# st.write(map._repr_html_(), unsafe_allow_html=True)
+
+	#####
+	st.markdown("# Route-based Traffic Preformance Score")
+
 	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 	edate = st.date_input('Select an end date' , value = datetime.datetime.now().date())
 
@@ -432,22 +484,22 @@ def showSgementTPS():
 	segmentLabel = st.selectbox("", segments['label'].iloc[0:10].values.tolist())
 	segmentID = segments[segments['label'] == segmentLabel]['segmentid'].values.tolist()[0]
 	# st.write(segmentID.values.tolist()[0])
-	df_SegTPS = getSegmentTPS_Day(sdate, edate, segmentID)
+	df_SegTPS_Day = getSegmentTPS_Day(sdate, edate, segmentID)
 
 	# st.write(segments['label'])
 
 	# remove outliers from HOV traffic index
-	df_SegTPS.loc[df_SegTPS['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+	df_SegTPS_Day.loc[df_SegTPS_Day['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
 
-	df_SegTPS['trafficindex_gp'] = df_SegTPS['trafficindex_gp'] * 100
+	df_SegTPS_Day['trafficindex_gp'] = df_SegTPS_Day['trafficindex_gp'] * 100
 	# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
-	df_SegTPS['trafficindex_hov'] = df_SegTPS['trafficindex_hov'] * 100
+	df_SegTPS_Day['trafficindex_hov'] = df_SegTPS_Day['trafficindex_hov'] * 100
 	lw = 1  # line width
 	fig = go.Figure()
-	fig.add_trace(go.Scatter(x=df_SegTPS['time'], y=df_SegTPS['trafficindex_gp'],
+	fig.add_trace(go.Scatter(x=df_SegTPS_Day['time'], y=df_SegTPS_Day['trafficindex_gp'],
 							 mode='lines', line=dict(dash='solid', width=lw),
 							 name='Main lane'))
-	fig.add_trace(go.Scatter(x=df_SegTPS['time'], y=df_SegTPS['trafficindex_hov'],
+	fig.add_trace(go.Scatter(x=df_SegTPS_Day['time'], y=df_SegTPS_Day['trafficindex_hov'],
 							 mode='lines', line=dict(dash='solid', width=lw),
 							 name='HOV lane'))
 	fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Performance Score (%)',
@@ -455,6 +507,8 @@ def showSgementTPS():
 					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
 	#fig.update_yaxes(range=[0, 1.1])
 	st.plotly_chart(fig)
+
+
 
 
 def showCOVID19():
