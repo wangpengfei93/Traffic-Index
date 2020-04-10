@@ -36,6 +36,7 @@ def getLoopDetectorLocation():
 
 	return pd.DataFrame(SQL_Query)
 
+
 def getTrafficIndex(date):
 	conn = getDatabaseConnection()
 
@@ -76,22 +77,8 @@ def getTrafficIndexMultiDays(sdate, edate):
     return pd.DataFrame(SQL_Query)
 
 
-# def getTrafficIndexLoss(sdate, edate):
-#     conn = getDatabaseConnection()
-
-#     SQL_Query = pd.read_sql_query(
-#     '''	SELECT convert(varchar, CAST([time] AS DATE), 107) as Date, sum(1 - [TrafficIndex_GP]) as GP_loss, sum(1 - [TrafficIndex_HOV]) as HOV_loss
-# 		FROM [RealTimeLoopData].[dbo].[TrafficIndex]
-# 		WHERE CAST([time] AS DATE) between ? and ?
-# 		GROUP BY CAST([time] AS DATE)
-# 		ORDER BY CAST([time] AS DATE)
-#       	''', conn, params = [sdate,edate])
-
-#     return pd.DataFrame(SQL_Query)
-
 def getDailyIndex(sdate, edate):
     conn = getDatabaseConnection()
-
     SQL_Query = pd.read_sql_query(
     '''	SELECT convert(varchar, CAST([time] AS DATE), 107) as Date, AVG([TrafficIndex_GP]) as daily_index_GP, AVG([TrafficIndex_HOV]) as daily_index_HOV
 		FROM [RealTimeLoopData].[dbo].[TrafficIndex]
@@ -100,8 +87,54 @@ def getDailyIndex(sdate, edate):
 		GROUP BY CAST([time] AS DATE)
 		ORDER BY CAST([time] AS DATE)
       	''', conn, params = [sdate,edate])
-
     return pd.DataFrame(SQL_Query)
+
+
+def getSegments():
+	conn = getDatabaseConnection()
+	SQL_Query = pd.read_sql_query(
+	'''	SELECT *
+		  FROM [RealTimeLoopData].[dbo].[Segments]''', conn)
+	return pd.DataFrame(SQL_Query)
+
+
+def getSegmentTPS_Day(sdate, edate, segmentID):
+	conn = getDatabaseConnection()
+	SQL_Query = pd.read_sql_query(
+	'''	SELECT CONVERT(varchar, CAST([time] AS DATE), 107) as [time]
+		      ,AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
+		      ,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
+		      ,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
+		      ,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
+		      ,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
+		      ,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
+		FROM [RealTimeLoopData].[dbo].[SegmentTrafficIndex]
+		WHERE [time] BETWEEN ? and ?
+		AND [segmentID] = ?
+		GROUP BY CAST([time] AS DATE)
+		ORDER BY CAST([time] AS DATE)
+		''', conn, params = [sdate, edate, segmentID])
+	return pd.DataFrame(SQL_Query)
+
+
+def getSegmentTPS_5Min(sdate, edate, segmentID):
+	conn = getDatabaseConnection()
+	SQL_Query = pd.read_sql_query(
+	'''	SELECT DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) as [time]
+		      ,AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
+		      ,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
+		      ,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
+		      ,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
+		      ,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
+		      ,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
+		FROM [RealTimeLoopData].[dbo].[SegmentTrafficIndex]
+		WHERE [time] BETWEEN ? and ?
+		AND [segmentID] = ?
+		GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0)
+		ORDER BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0)
+		''', conn, params = [sdate, edate, segmentID])
+	return pd.DataFrame(SQL_Query)
+
 
 def getMorningPeakVolume(sdate, edate):
     conn = getDatabaseConnection()
@@ -157,7 +190,7 @@ def IntroduceTrafficIndex():
 				"With this website, you can view "
 				"\n * The TPS with different temporal resolutions, ranging from one minute to one day. "
 				"\n * The TPS of general purpose (GP) and HOV lanes. "
-				"\n * Impact of COVID-19 on urban traffic reflected by the Traffic Performance Score. "
+				"\n * Impact of COVID-19 on urban traffic reflected by the TPS. "
 				"\n * Other traffic performance metrics. " )
 	
 	st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
@@ -232,8 +265,6 @@ def IntroduceTrafficIndex():
 
 
 	
-
-
 def showTrafficIndex():
 	###########
 	# Sidebar #
@@ -342,14 +373,13 @@ def showTrafficIndex():
 		st.write('From ',sdate_TD, ' to ', edate_TD,':')
 
 		df_TI_range = getTrafficIndexMultiDays(sdate_TD, edate_TD)
-
+		
 		# remove outliers from HOV traffic index
 		df_TI_range.loc[df_TI_range['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
-
 		df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'] * 100
-		# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
 		df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'] * 100
-		# df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'].astype('int64')
+		# df_TI_range.columns = ""
+
 		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
 		st.write(df_TI_range[dataFields])
 
@@ -386,6 +416,45 @@ def get_data_from_wikipedia(url):
 	df['new case'] = df['confirmed case'] - df['confirmed case'].shift(1)
 	df.loc[0, 'new case'] = 0
 	return df
+
+
+def showSgementTPS():
+	st.markdown("# Segment-based Traffic Preformance Score")
+	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	edate = st.date_input('Select an end date' , value = datetime.datetime.now().date())
+
+	st.write('From ',sdate, ' to ', edate)
+
+	segments = getSegments()
+	segments['label'] = 'Route (' + segments['route'].astype(int).astype(str) + '),\t Direction (' + segments['direction'] + 'B),\t Milepost (' \
+						+ segments['milepost_small'].astype(int).astype(str) + ', ' + segments['milepost_large'].astype(int).astype(str) + ')'
+	
+	segmentLabel = st.selectbox("", segments['label'].iloc[0:10].values.tolist())
+	segmentID = segments[segments['label'] == segmentLabel]['segmentid'].values.tolist()[0]
+	# st.write(segmentID.values.tolist()[0])
+	df_SegTPS = getSegmentTPS_Day(sdate, edate, segmentID)
+
+	# st.write(segments['label'])
+
+	# remove outliers from HOV traffic index
+	df_SegTPS.loc[df_SegTPS['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+
+	df_SegTPS['trafficindex_gp'] = df_SegTPS['trafficindex_gp'] * 100
+	# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
+	df_SegTPS['trafficindex_hov'] = df_SegTPS['trafficindex_hov'] * 100
+	lw = 1  # line width
+	fig = go.Figure()
+	fig.add_trace(go.Scatter(x=df_SegTPS['time'], y=df_SegTPS['trafficindex_gp'],
+							 mode='lines', line=dict(dash='solid', width=lw),
+							 name='Main lane'))
+	fig.add_trace(go.Scatter(x=df_SegTPS['time'], y=df_SegTPS['trafficindex_hov'],
+							 mode='lines', line=dict(dash='solid', width=lw),
+							 name='HOV lane'))
+	fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Performance Score (%)',
+					  legend=dict(x=.01, y=0.05),
+					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
+	#fig.update_yaxes(range=[0, 1.1])
+	st.plotly_chart(fig)
 
 
 def showCOVID19():
@@ -625,12 +694,14 @@ def main():
 
 	st.sidebar.title("Traffic Performance Score")
 	app_mode = st.sidebar.radio("Navitation",
-	        ["Home", "Traffic Performance Score", "Impact of COVID-19", "Other Traffic Metrics"])
+	        ["Home", "Traffic Performance Score", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics"])
 	# st.sidebar.markdown("[![this is an image link](./images/STARLab.png)](https://streamlit.io)")
 	if  app_mode == "Home":
 		IntroduceTrafficIndex()
 	elif app_mode == "Traffic Performance Score":
 		showTrafficIndex()
+	elif app_mode == "Segment-based TPS":
+		showSgementTPS()
 	elif app_mode == "Impact of COVID-19":
 		showCOVID19()
 	elif app_mode == "Other Traffic Metrics":
