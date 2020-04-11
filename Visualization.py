@@ -92,7 +92,11 @@ def GenerateGeo(TPS):
 
 	# STREAMLIT_STATIC_PATH = "/Users/meixin/anaconda3/lib/python3.7/site-packages/streamlit/static/"
 
-	STREAMLIT_STATIC_PATH = 'C:\\Users\\Zhiyong\\Anaconda3\\Lib\\site-packages\\streamlit\\static\\'
+	# STREAMLIT_STATIC_PATH = 'C:\\Users\\Zhiyong\\Anaconda3\\Lib\\site-packages\\streamlit\\static\\'
+
+	STREAMLIT_STATIC_PATH = os.path.dirname(st.__file__) + '\\static\\'
+
+	# st.write(os.path.dirname(st.__file__) + '\\static')
 
 	for filename in glob.glob(STREAMLIT_STATIC_PATH + 'map*'):
 		os.remove(filename)
@@ -102,7 +106,7 @@ def GenerateGeo(TPS):
 	open(map_path, 'w').write(m._repr_html_())
 
 	# st.markdown('Below is the traffic performance score by segments:' + dt_string)
-	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%;height:600px;"> </iframe>', unsafe_allow_html=True)
+	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%;height:500px;"> </iframe>', unsafe_allow_html=True)
 	# return m
 		
 
