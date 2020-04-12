@@ -112,7 +112,6 @@ def getSegments():
 		  FROM [RealTimeLoopData].[dbo].[Segments]''', conn)
 	return pd.DataFrame(SQL_Query)
 
-
 def getSegmentTPS_Day(sdate, edate, segmentID):
 	conn = getDatabaseConnection()
 	SQL_Query = pd.read_sql_query(
@@ -131,24 +130,24 @@ def getSegmentTPS_Day(sdate, edate, segmentID):
 		''', conn, params = [sdate, edate, segmentID])
 	return pd.DataFrame(SQL_Query)
 
-
-def getSegmentTPS_5Min(sdate, edate, segmentID):
-	conn = getDatabaseConnection()
-	SQL_Query = pd.read_sql_query(
-	'''	SELECT DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) as [time]
-		      ,AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
-		      ,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
-		      ,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
-		      ,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
-		      ,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
-		      ,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
-		FROM [RealTimeLoopData].[dbo].[SegmentTrafficIndex]
-		WHERE [time] BETWEEN ? and ?
-		AND [segmentID] = ?
-		GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0)
-		ORDER BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0)
-		''', conn, params = [sdate, edate, segmentID])
-	return pd.DataFrame(SQL_Query)
+# Zhiyong to confirm whether this is a no-use code clip
+# def getSegmentTPS_5Min(sdate, edate, segmentID):
+# 	conn = getDatabaseConnection()
+# 	SQL_Query = pd.read_sql_query(
+# 	'''	SELECT DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0) as [time]
+# 		      ,AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
+# 		      ,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
+# 		      ,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
+# 		      ,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
+# 		      ,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
+# 		      ,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
+# 		FROM [RealTimeLoopData].[dbo].[SegmentTrafficIndex]
+# 		WHERE [time] BETWEEN ? and ?
+# 		AND [segmentID] = ?
+# 		GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0)
+# 		ORDER BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0)
+# 		''', conn, params = [sdate, edate, segmentID])
+# 	return pd.DataFrame(SQL_Query)
 
 def getSegmentTPS_5Min(sdate, edate):
 	conn = getDatabaseConnection()
@@ -197,7 +196,6 @@ def getEveningPeakVolume(sdate, edate):
       	''', conn, params = [sdate,edate])
 
     return pd.DataFrame(SQL_Query)
-
 
 def getCOVID19Info():
 	return pd.read_csv('Washington_COVID_Cases.csv') 
@@ -430,7 +428,6 @@ def get_data_from_sel(url, sel):
     except:
         return None
 
-
 def get_data_from_wikipedia(url):
 	sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
 	sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
@@ -520,8 +517,6 @@ def showSgementTPS():
 					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
 	#fig.update_yaxes(range=[0, 1.1])
 	st.plotly_chart(fig)
-
-
 
 
 def showCOVID19():
