@@ -15,13 +15,26 @@ from requests_html import HTMLSession
 import locale
 import folium
 
+from sys import platform 
+if platform == "linux" or platform == "linux2":
+    # linux
+	SQL_DRIVER = 'SQL Server'
+elif platform == "darwin":
+    # OS X
+	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+
+elif platform == "win32":
+    # Windows...
+	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+
+
 from Visualization import GenerateGeo
 #####################################################
 # SQL query functions
 #####################################################
 #@st.cache(allow_output_mutation=True)
 def getDatabaseConnection():
-	return pyodbc.connect('DRIVER={SQL Server};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
+	return pyodbc.connect(f'DRIVER={SQL_DRIVER};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
 
 @st.cache
 def getLoopDetectorLocation():

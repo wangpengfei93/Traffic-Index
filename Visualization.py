@@ -7,8 +7,20 @@ import os
 import time 
 import glob
 
+from sys import platform 
+if platform == "linux" or platform == "linux2":
+    # linux
+	SQL_DRIVER = 'SQL Server'
+elif platform == "darwin":
+    # OS X
+	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+
+elif platform == "win32":
+    # Windows...
+	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+
 def getDatabaseConnection():
-	return pyodbc.connect('DRIVER={SQL Server};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
+	return pyodbc.connect(f'DRIVER={SQL_DRIVER};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
 
 def GetSegmentGeo():
 	# load geo
@@ -94,7 +106,8 @@ def GenerateGeo(TPS):
 
 	# STREAMLIT_STATIC_PATH = 'C:\\Users\\Zhiyong\\Anaconda3\\Lib\\site-packages\\streamlit\\static\\'
 
-	STREAMLIT_STATIC_PATH = os.path.dirname(st.__file__) + '\\static\\'
+	STREAMLIT_STATIC_PATH = os.path.join(os.path.dirname(st.__file__), 'static')
+	print(STREAMLIT_STATIC_PATH)
 
 	# st.write(os.path.dirname(st.__file__) + '\\static')
 
@@ -102,13 +115,12 @@ def GenerateGeo(TPS):
 		os.remove(filename)
 
 	filename_with_time = f'map_{time.time()}.html'
-	map_path = STREAMLIT_STATIC_PATH + filename_with_time
+	map_path = os.path.join(STREAMLIT_STATIC_PATH, filename_with_time)
 	open(map_path, 'w').write(m._repr_html_())
 
 	# st.markdown('Below is the traffic performance score by segments:' + dt_string)
 	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%;height:500px;"> </iframe>', unsafe_allow_html=True)
 	# return m
-		
 
 
 
