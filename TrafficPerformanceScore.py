@@ -748,11 +748,11 @@ def main():
 
 	st.sidebar.title("Traffic Performance Score")
 	app_mode = st.sidebar.radio("Navitation",
-	        ["Home", "Traffic Performance Score", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics"])
+	        ["Home", "Network-based TPS", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics"])
 	# st.sidebar.markdown("[![this is an image link](./images/STARLab.png)](https://streamlit.io)")
 	if  app_mode == "Home":
 		IntroduceTrafficIndex()
-	elif app_mode == "Traffic Performance Score":
+	elif app_mode == "Network-based TPS":
 		showTrafficIndex()
 	elif app_mode == "Segment-based TPS":
 		showSgementTPS()
