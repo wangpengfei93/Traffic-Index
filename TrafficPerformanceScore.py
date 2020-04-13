@@ -26,9 +26,10 @@ elif platform == "darwin":
 elif platform == "win32":
     # Windows...
 	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+	SQL_DRIVER = 'SQL Server'
 
 
-from Visualization import GenerateGeo
+from Visualization import GenerateGeo, GenerateGeoAnimation
 #####################################################
 # SQL query functions
 #####################################################
@@ -164,6 +165,25 @@ def getSegmentTPS_5Min(sdate, edate):
 		WHERE [time] BETWEEN ? and ?
 		GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0),[segmentID]
 		ORDER BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/5*5, 0),[segmentID]
+		''', conn, params = [sdate, edate])
+	return pd.DataFrame(SQL_Query)
+
+
+def getSegmentTPS_1Hour(sdate, edate):
+	conn = getDatabaseConnection()
+	SQL_Query = pd.read_sql_query(
+	'''	SELECT DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/60*60, 0) as [time]
+				,[segmentID]
+		      	,AVG([AVG_Spd_GP]) AS [AVG_Spd_GP]
+		      	,AVG([AVG_Spd_HOV]) AS [AVG_Spd_HOV]
+		      	,AVG([AVG_Vol_GP]) AS [AVG_Vol_GP]
+		      	,AVG([AVG_Vol_HOV]) AS [AVG_Vol_HOV]
+		      	,AVG([TrafficIndex_GP]) AS [TrafficIndex_GP]
+		      	,AVG([TrafficIndex_HOV]) AS [TrafficIndex_HOV]
+		FROM [RealTimeLoopData].[dbo].[SegmentTrafficIndex]
+		WHERE [time] BETWEEN ? and ?
+		GROUP BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/60*60, 0),[segmentID]
+		ORDER BY DATEADD(MINUTE, DATEDIFF(MINUTE, 0, [time])/60*60, 0),[segmentID]
 		''', conn, params = [sdate, edate])
 	return pd.DataFrame(SQL_Query)
 
@@ -467,28 +487,36 @@ def showSgementTPS():
 
 	date = st.date_input('Pick an end date', value = datetime.datetime.now().date())
 	
-	
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
 	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
-	# st.write(datatime2)
+	
 
-	df_SegTPS_5Min = getSegmentTPS_5Min(datatime1, datatime2)
-	df_SegTPS_5Min.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+	
+	# df_SegTPS_5Min = getSegmentTPS_5Min(datatime1, datatime2)
+	# df_SegTPS_5Min.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+	
+
 	# time = st.time_input('Pick an end date', value = datetime.datetime.now().time())
 	# time = time.replace(second=0, microsecond=0)
 	# dt = datetime.datetime.combine(date, time)
 	# st.write(dt)
 	# st.write(df_SegTPS_5Min)
 	# st.write(df_SegTPS_5Min[df_SegTPS_5Min['time'] == dt])
+	annimation = False
 
-	dt = st.selectbox(
-	    'Select a time',
-	    df_SegTPS_5Min['time'].astype(str).unique().tolist()
-	)
+	if annimation:
+		df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
+		df_SegTPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+		GenerateGeoAnimation(df_SegTPS)
+	else:
+		df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
+		df_SegTPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+		
+		dt = st.selectbox('Select a time', df_SegTPS['time'].astype(str).unique().tolist())
+		TPS = df_SegTPS[df_SegTPS['time'] == dt]
+		GenerateGeo(TPS)
 
-	data = df_SegTPS_5Min[df_SegTPS_5Min['time'] == dt]
-	# st.write(data)
-	GenerateGeo(data)
+	
 	# map.save('index.html')
 	# # st.write(m._repr_html_(), unsafe_allow_html=True)
 	# st.write(map._repr_html_(), unsafe_allow_html=True)

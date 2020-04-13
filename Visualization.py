@@ -12,6 +12,7 @@ import branca
 from folium.features import GeoJson, GeoJsonTooltip
 from folium import plugins
 import fiona
+import fiona.crs
 
 
 from sys import platform 
@@ -24,8 +25,8 @@ elif platform == "darwin":
 
 elif platform == "win32":
     # Windows...
-	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
-
+	# SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+	SQL_DRIVER = 'SQL Server'
 
 def getDatabaseConnection():
 	return pyodbc.connect(f'DRIVER={SQL_DRIVER};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
@@ -165,4 +166,93 @@ def GenerateGeo(TPS):
 
 	# st.markdown('Below is the traffic performance score by segments:' + dt_string)
 	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%; height:400px;"> </iframe>', unsafe_allow_html=True)
-	# return m
+
+
+
+def	GenerateGeoAnimation(TPS):
+	segment = GetSegmentGeo()
+	# merge TPS with segment data
+	segment.rename(columns={"segmentid": "segmentID"}, inplace = True)
+	data = segment.merge(TPS, on = ['segmentID'], how = 'left')
+	data.fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
+
+	scaled_data = data
+	scaled_data['TrafficIndex_GP'] = data['TrafficIndex_GP']*100
+	scaled_data['TrafficIndex_HOV'] = data['TrafficIndex_HOV']*100
+
+	tooltip = GeoJsonTooltip(
+		fields=["name", "TrafficIndex_GP", 'time'],
+		aliases=["Road Segment", "Traffic Performance Score", 'Time'],
+		localize=True,
+		sticky=False,
+		labels=True,
+		style="""
+			background-color: #F0EFEF;
+			border: 2px solid black;
+			border-radius: 3px;
+			box-shadow: 3px;
+		"""
+	)
+
+	tooltip_HOV = GeoJsonTooltip(
+		fields=["name", "TrafficIndex_HOV", 'time'],
+		aliases=["Road Segment", "Traffic Performance Score", 'Time'],
+		localize=True,
+		sticky=False,
+		labels=True,
+		style="""
+			background-color: #F0EFEF;
+			border: 2px solid black;
+			border-radius: 3px;
+			box-shadow: 3px;
+		"""
+	)
+
+	temporal_data = segment.merge(TPS, on = ['segmentID'], how = 'left')
+	temporal_data['TrafficIndex_GP'] = temporal_data['TrafficIndex_GP']*100
+	temporal_data['TrafficIndex_HOV'] = temporal_data['TrafficIndex_HOV']*100
+
+	features = []
+	for _, line in temporal_data.iterrows():
+	    route = line['geometry']
+	    try:
+	        features.append(Feature(geometry = route, properties={"TrafficIndex_GP":float(line['TrafficIndex_GP']), "name": line["name"], 
+	                                                          "times":[line["time"].isoformat()]*len(line['geometry'].coords), "style":{"color": colormap(line['TrafficIndex_GP'])}}))
+	    except:
+	        continue
+
+
+	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
+
+	plugins.TimestampedGeoJson({
+	    'type': 'FeatureCollection',
+	    'features': features,
+	}, period='PT1H', add_last_point= False).add_to(m)
+
+	colormap.add_to(m)
+	# full screen plugins
+	plugins.Fullscreen(
+		position='topright',
+		title='Expand me',
+		title_cancel='Exit me',
+		force_separate_button=True
+	).add_to(m)
+
+	# folium.LayerControl(collapsed=False).add_to(m)
+
+
+
+	STREAMLIT_STATIC_PATH = os.path.join(os.path.dirname(st.__file__), 'static')
+
+	# st.write(os.path.dirname(st.__file__) + '\\static')
+
+	for filename in glob.glob(STREAMLIT_STATIC_PATH + 'map*'):
+		os.remove(filename)
+
+	filename_with_time = f'map_{time.time()}.html'
+	map_path = os.path.join(STREAMLIT_STATIC_PATH, filename_with_time)
+	open(map_path, 'w').write(m._repr_html_())
+
+	# st.markdown('Below is the traffic performance score by segments:' + dt_string)
+	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%; height:400px;"> </iframe>', unsafe_allow_html=True)
+
