@@ -6,21 +6,50 @@ import streamlit as st
 import os
 import time 
 import glob
+
+import geopandas
 import branca
+from folium.features import GeoJson, GeoJsonTooltip
+from folium import plugins
+import fiona
+
+
+from sys import platform 
+if platform == "linux" or platform == "linux2":
+    # linux
+	SQL_DRIVER = 'SQL Server'
+elif platform == "darwin":
+    # OS X
+	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+
+elif platform == "win32":
+    # Windows...
+	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+
 
 def getDatabaseConnection():
-	return pyodbc.connect('DRIVER={SQL Server};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
+	return pyodbc.connect(f'DRIVER={SQL_DRIVER};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
+
+def route_map_func(x):
+    if x in [5, 90, 405]: 
+        return 'I-' + str(x) 
+    else: 
+        return 'SR ' + str(x)
+
+def name_map_func(x):
+    return x['route_name'] + ' ' + x['direction_name'] + ' ' + str(int(x['milepost_small'])) + ' to ' + str(int(x['milepost_large']))
 
 def GetSegmentGeo():
 	# load geo
-	geo = pd.read_csv('SegmentsGeo.csv')
+	geo = geopandas.read_file('segments.shp')
+	geo_csv = pd.read_csv('SegmentsGeo.csv')
+	geo_csv.drop(['geometry'], axis = 1, inplace = True)
+	geo = pd.concat([geo_csv, geo['geometry']], axis = 1)
 
 	geo_key = []
 	for i in range(len(geo)):
 	    geo_key.append(str(geo['route'][i]) + '_' + geo['direct'][i].upper() + '_' + str(geo['mile_min'][i]) + '_' + str(geo['mile_max'][i]))
 	geo['key'] = geo_key
-
-	# st.write(geo)
 
 	# load segments ids
 	conn = getDatabaseConnection()
@@ -35,30 +64,20 @@ def GetSegmentGeo():
 	for i in range(len(segmentIDs)):
 	    seg_key.append(str(segmentIDs['route'][i]) + '_' + segmentIDs['mpdirection'][i].upper() + '_' + str(segmentIDs['milepost_small'][i]) + '_' + str(segmentIDs['milepost_large'][i]))
 	segmentIDs['key'] = seg_key
-
-	# st.write(segmentIDs)
-
-	# merge
 	segment = geo.merge(segmentIDs, on = ['key'], how = 'inner')
-
-	# st.write(segment)
+    
+    # create name
+	segment['route_name'] = segment['route_x'].apply(route_map_func) 
+	segment['direction_name'] = segment['direction'].apply(lambda x: x + 'B')
+	segment['name'] = segment.apply(name_map_func, axis = 1)
 
 	return segment
 
-# def style_function(feature):
-#     value = feature['properties']['TrafficIndex_GP']
-#     #print(value)
-#     if value > 0.95:
-#         color = 'green'
-#     elif value > 0.90:
-#         color = 'yellow'
-#     else:
-#         color = 'red'
-        
-#     return {
-#         'weight': 1,
-#         'color': color}
 
+colormap = branca.colormap.LinearColormap(vmin = 70, 
+                                        vmax= 100, 
+                                        colors=['red','orange','lightblue','green','darkgreen'],
+                                       caption="Traffic Performance Score")
 
 def style_func(feature):
     value = feature['properties']['TrafficIndex_GP']
@@ -68,7 +87,6 @@ def style_func(feature):
         else "transparent"
     }
 
-
 def style_func_HOV(feature):
     value = feature['properties']['TrafficIndex_HOV']
     return {
@@ -77,43 +95,64 @@ def style_func_HOV(feature):
         else "transparent"
     }
 
-
 def GenerateGeo(TPS):
-
-	# st.write(TPS)
-
 	segment = GetSegmentGeo()
 	# merge TPS with segment data
+	segment.rename(columns={"segmentid": "segmentID"}, inplace = True)
 	data = segment.merge(TPS, on = ['segmentID'], how = 'left')
 	data.fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
 
-	features = []
-	for i in range(len(data)):
-	    coordinates = []
-	    if data['geometry'][i].split(' ')[0] != 'LINESTRING': # dropped multi-linestring
-	        continue
-	    geo_string = data['geometry'][i][12:-1]
-	    temp = geo_string.split(',')
-	    for item in temp:
-	        lon, lat = item.strip().split(' ')
-	        coordinates.append((float(lon), float(lat)))
-	        
-	    route=LineString(coordinates)
-	    features.append(Feature(geometry = route, properties={"TrafficIndex_GP":float(data['TrafficIndex_GP'][i])}))
-	feature_collection = FeatureCollection(features)
+	scaled_data = data
+	scaled_data['TrafficIndex_GP'] = data['TrafficIndex_GP']*100
+	scaled_data['TrafficIndex_HOV'] = data['TrafficIndex_HOV']*100
 
-	with open('data.geojson', 'w') as f:
-	   dump(feature_collection, f)
+	tooltip = GeoJsonTooltip(
+		fields=["name", "TrafficIndex_GP", 'time'],
+		aliases=["Road Segment", "Traffic Performance Score", 'Time'],
+		localize=True,
+		sticky=False,
+		labels=True,
+		style="""
+			background-color: #F0EFEF;
+			border: 2px solid black;
+			border-radius: 3px;
+			box-shadow: 3px;
+		"""
+	)
+
+	tooltip_HOV = GeoJsonTooltip(
+		fields=["name", "TrafficIndex_HOV", 'time'],
+		aliases=["Road Segment", "Traffic Performance Score", 'Time'],
+		localize=True,
+		sticky=False,
+		labels=True,
+		style="""
+			background-color: #F0EFEF;
+			border: 2px solid black;
+			border-radius: 3px;
+			box-shadow: 3px;
+		"""
+	)
+
+	data_gdf = geopandas.GeoDataFrame(scaled_data, crs=fiona.crs.from_epsg(4326))
+	data_gdf['time'] = data_gdf['time'].apply(lambda x: x.isoformat())
 
 	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
 
-	folium.GeoJson('./data.geojson', style_function= style_function).add_to(m)
+	folium.GeoJson(data_gdf, style_function= style_func, tooltip = tooltip, name = 'GP Lane').add_to(m)
+	folium.GeoJson(data_gdf, style_function= style_func_HOV, tooltip = tooltip_HOV, name = 'HOV Lane', show = False).add_to(m)
 
-	# STREAMLIT_STATIC_PATH = "/Users/meixin/anaconda3/lib/python3.7/site-packages/streamlit/static/"
+	colormap.add_to(m)
+	# full screen plugins
+	plugins.Fullscreen(
+		position='topright',
+		title='Expand me',
+		title_cancel='Exit me',
+		force_separate_button=True
+	).add_to(m)
+	folium.LayerControl(collapsed=False).add_to(m)
 
-	# STREAMLIT_STATIC_PATH = 'C:\\Users\\Zhiyong\\Anaconda3\\Lib\\site-packages\\streamlit\\static\\'
-
-	STREAMLIT_STATIC_PATH = os.path.dirname(st.__file__) + '\\static\\'
+	STREAMLIT_STATIC_PATH = os.path.join(os.path.dirname(st.__file__), 'static')
 
 	# st.write(os.path.dirname(st.__file__) + '\\static')
 
@@ -121,13 +160,9 @@ def GenerateGeo(TPS):
 		os.remove(filename)
 
 	filename_with_time = f'map_{time.time()}.html'
-	map_path = STREAMLIT_STATIC_PATH + filename_with_time
+	map_path = os.path.join(STREAMLIT_STATIC_PATH, filename_with_time)
 	open(map_path, 'w').write(m._repr_html_())
 
 	# st.markdown('Below is the traffic performance score by segments:' + dt_string)
-	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%;height:500px;"> </iframe>', unsafe_allow_html=True)
+	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%; height:400px;"> </iframe>', unsafe_allow_html=True)
 	# return m
-		
-
-
-
