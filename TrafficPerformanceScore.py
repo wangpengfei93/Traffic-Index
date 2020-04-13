@@ -347,7 +347,7 @@ def showTrafficIndex():
 	if daily_Index:
 		st.markdown("## Daily Traffic Performance Score")
 
-		sdate_DI = st.date_input('Select a start date for Daily Traffic Performance Score', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+		sdate_DI = st.date_input('Select a start date for Daily Traffic Performance Score', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
 		edate_DI = st.date_input('Select an end date for Daily Traffic Performance Score' , value = datetime.datetime.now().date())
 		st.write('From ',sdate_DI, ' to ', edate_DI,':')
 
@@ -362,7 +362,7 @@ def showTrafficIndex():
 		# df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'].astype('int64')
 
 		data = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
-		lw = 2  # line width
+		lw = 1  # line width
 		# Create traces
 		fig = go.Figure()
 		fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_gp'],
@@ -524,7 +524,7 @@ def showSgementTPS():
 	# st.write(dt)
 	# st.write(df_SegTPS_5Min)
 	# st.write(df_SegTPS_5Min[df_SegTPS_5Min['time'] == dt])
-	annimation = False
+	annimation = True
 
 	if annimation:
 		df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
@@ -752,7 +752,7 @@ def showOtherMetrics():
 		dataFields = st.multiselect('Data fields', ['Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'] , default = ['Morning_GP', 'Evening_GP'] )
 
 		data = df_pv[['date'] + dataFields]
-		lw = 2  # line width
+		lw = 1  # line width
 		# Create traces
 		fig = go.Figure()
 		for item in dataFields:
