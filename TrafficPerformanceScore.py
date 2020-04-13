@@ -450,37 +450,45 @@ def get_data_from_sel(url, sel):
 
 
 def update_and_get_covid19_info(url):
+    sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
+    sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
+    sel_death = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(4) > span:nth-child(1)'
+    
+    try:
+        date_list = get_data_from_sel(url, sel_date)
+        # the first and last items are not data
+        del date_list[len(date_list) - 1]
+        del date_list[0]
+        cases_list_0 = get_data_from_sel(url, sel_cases)
+        death_list_0 = get_data_from_sel(url, sel_death)
+        # remove the thousand seprators in cases_list_0 and death_list_0
+        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+        cases_list, death_list = [],[];
+        for n in cases_list_0:
+            cases_list.append(locale.atoi(n))
+        for n in death_list_0:
+            death_list.append(locale.atoi(n))
 
-	sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
-	sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
-	
-	# get date_list and cases_list from Wikepedia webpage
-	date_list = get_data_from_sel(url, sel_date)
-	del date_list[len(date_list) - 1]
-	del date_list[0]
-	cases_list_0 = get_data_from_sel(url, sel_cases)
-	locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-	cases_list = [];
-	for n in cases_list_0:
-		cases_list.append(locale.atoi(n))
-	
-	# formulate a dataframe containing date, confirmed case, and new case
-	df_web = pd.DataFrame(date_list, columns=['date'])
-	df_web['confirmed case'] = cases_list
-	df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
-	df_web.loc[0, 'new case'] = 0
-	df_web['date'] = df_web['date'].astype('datetime64[ns]')
-	
-	# update df_csv to df_new, using df_web
-	df_csv = getCOVID19Info()
-	df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
-	df_new = df_csv.append(df_web, ignore_index=True)
-	df_new = df_new.drop_duplicates(subset=['date'], keep='first')
+        df_web = pd.DataFrame({'date':date_list, 'confirmed case':cases_list, 'death case':death_list})
+        # calculate new case based on confirmed case
+        df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
+        df_web.loc[0, 'new case'] = 0
+        df_web['date'] = df_web['date'].astype('datetime64[ns]')
 
-	if len(df_new) > len(df_csv):
-		df_new.to_csv("Washington_COVID_Cases.csv", mode='w', header=True, index=False)
+        df_csv = getCOVID19Info()
+        df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
+        # merge df_web and df_csv
+        df_new = df_csv.append(df_web, ignore_index=True)
+        df_new = df_new.drop_duplicates(subset=['date'], keep='first')
 
-	return getCOVID19Info()
+        if len(df_new) > len(df_csv):
+            df_new.to_csv("Washington_COVID_Cases.csv", mode='w', header=True, index=False)
+
+        return getCOVID19Info()
+    
+    except:
+        return getCOVID19Info()
+
 
 def showSgementTPS():
 	st.markdown("# Segment-based Traffic Preformance Score")
@@ -647,11 +655,11 @@ def showCOVID19():
 							 name='New Cases',
 							 legendgroup='group1'),
 					secondary_y=True)
-	# fig.add_trace(go.Scatter(x=data['date'], y=data['total death'],
-	# 						 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
-	# 						 name='Total Death',
-	# 						 legendgroup='group1'),
-	# 				secondary_y=True)
+	fig.add_trace(go.Scatter(x=data['date'], y=data['death case'],
+	 						 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
+	 						 name='Total Death',
+	 						 legendgroup='group1'),
+	 				secondary_y=True)
 	
 
 	fig.update_traces(textposition='top center')
