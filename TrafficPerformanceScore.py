@@ -14,6 +14,7 @@ from PIL import Image
 from requests_html import HTMLSession
 import locale
 import folium
+import base64
 
 from sys import platform 
 if platform == "linux" or platform == "linux2":
@@ -315,6 +316,7 @@ def IntroduceTrafficIndex():
 				"The closer to one the **TPS** is, the better the overall network-wide traffic condition is. ")
 
 
+
 	
 def showTrafficIndex():
 	###########
@@ -434,6 +436,18 @@ def showTrafficIndex():
 		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
 		st.write(df_TI_range[dataFields])
 
+		st.markdown("Download the tabular data as a CSV file:")
+		st.markdown(get_table_download_link(df_TI_range[dataFields]), unsafe_allow_html=True)
+
+def get_table_download_link(df):
+    """Generates a link allowing the data in a given panda dataframe to be downloaded
+    in:  dataframe
+    out: href string
+    """
+    csv = df.to_csv(index=False)
+    b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
+    href = f'<a href="data:file/csv;base64,{b64}" download="data.csv">Download csv file</a>'
+    return href
 
 def get_data_from_sel(url, sel):
     session = HTMLSession()
@@ -701,6 +715,9 @@ def showCOVID19():
 					  	height = 450,
 					  	plot_bgcolor='white')
 	st.plotly_chart(fig)
+
+	st.markdown("Download COVID-19 related data as a CSV file:")
+	st.markdown(get_table_download_link(data), unsafe_allow_html=True)
 
 
 def showOtherMetrics():

@@ -101,7 +101,9 @@ def GenerateGeo(TPS):
 	# merge TPS with segment data
 	segment.rename(columns={"segmentid": "segmentID"}, inplace = True)
 	data = segment.merge(TPS, on = ['segmentID'], how = 'left')
-	data.fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
+
+	data['TrafficIndex_GP'].fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
+	data['TrafficIndex_HOV'].fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
 
 	scaled_data = data
 	scaled_data['TrafficIndex_GP'] = data['TrafficIndex_GP']*100
