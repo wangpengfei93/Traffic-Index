@@ -6,6 +6,7 @@ import streamlit as st
 import os
 import time 
 import glob
+import branca
 
 def getDatabaseConnection():
 	return pyodbc.connect('DRIVER={SQL Server};SERVER=128.95.29.74;DATABASE=RealTimeLoopData;UID=starlab;PWD=star*lab1')
@@ -44,19 +45,37 @@ def GetSegmentGeo():
 
 	return segment
 
-def style_function(feature):
-    value = feature['properties']['TrafficIndex_GP']
-    #print(value)
-    if value > 0.95:
-        color = 'green'
-    elif value > 0.90:
-        color = 'yellow'
-    else:
-        color = 'red'
+# def style_function(feature):
+#     value = feature['properties']['TrafficIndex_GP']
+#     #print(value)
+#     if value > 0.95:
+#         color = 'green'
+#     elif value > 0.90:
+#         color = 'yellow'
+#     else:
+#         color = 'red'
         
+#     return {
+#         'weight': 1,
+#         'color': color}
+
+
+def style_func(feature):
+    value = feature['properties']['TrafficIndex_GP']
     return {
-        'weight': 1,
-        'color': color}
+        "color": colormap(value)
+        if value is not None
+        else "transparent"
+    }
+
+
+def style_func_HOV(feature):
+    value = feature['properties']['TrafficIndex_HOV']
+    return {
+        "color": colormap(value)
+        if value is not None
+        else "transparent"
+    }
 
 
 def GenerateGeo(TPS):
