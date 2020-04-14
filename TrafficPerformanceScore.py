@@ -248,10 +248,26 @@ def IntroduceTrafficIndex():
 	st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
 	
 	#################################################################
-	st.markdown("## Today's Traffic Performance Score")
+	st.markdown("## Traffic Performance Score")
+
+	
+
+	st.markdown("### Segment-baed TPS Map")
+
+	date = st.date_input('Pick a date', value = datetime.datetime.now().date())
+	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
+	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
+	
+	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
+	df_SegTPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+		
+	GenerateGeoAnimation(df_SegTPS)
+
+	st.markdown("### Variation of Daily Network-wide TPS")
+
 	# date = st.date_input('Please select a date', datetime.datetime.now().date())
-	date = datetime.datetime.now().date()
-	df_TI = getTrafficIndex(datetime.datetime.now().date())
+	# date = datetime.datetime.now().date()
+	df_TI = getTrafficIndex(date)
 	
 	# remove outliers from HOV traffic index
 	df_TI.loc[df_TI['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
@@ -524,19 +540,21 @@ def showSgementTPS():
 	# st.write(dt)
 	# st.write(df_SegTPS_5Min)
 	# st.write(df_SegTPS_5Min[df_SegTPS_5Min['time'] == dt])
+	
+
+	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
+	df_SegTPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+		
 	annimation = True
 
-	if annimation:
-		df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
-		df_SegTPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
-		GenerateGeoAnimation(df_SegTPS)
-	else:
-		df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
-		df_SegTPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
-		
-		dt = st.selectbox('Select a time', df_SegTPS['time'].astype(str).unique().tolist())
-		TPS = df_SegTPS[df_SegTPS['time'] == dt]
-		GenerateGeo(TPS)
+	# annimation = st.radio( "Display Map", ('Dynamic Map', 'Animated Map')
+
+	# if annimation == 'Dynamic Map':
+	# GenerateGeoAnimation(df_SegTPS)
+	# else:
+	dt = st.selectbox('Select a time', df_SegTPS['time'].astype(str).unique().tolist())
+	TPS = df_SegTPS[df_SegTPS['time'] == dt]
+	GenerateGeo(TPS)
 
 	
 	# map.save('index.html')
