@@ -252,7 +252,7 @@ def IntroduceTrafficIndex():
 
 	
 
-	st.markdown("### Segment-baed TPS Map")
+	st.markdown("### Segment-based Traffic Performance Score Map")
 
 	date = st.date_input('Pick a date', value = datetime.datetime.now().date())
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
