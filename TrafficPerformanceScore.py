@@ -41,6 +41,8 @@ def getDatabaseConnection():
 @st.cache
 def getLoopDetectorLocation():
 	conn = getDatabaseConnection()
+	x =1
+	y =2
 
 	SQL_Query = pd.read_sql_query(
 	'''	SELECT Distinct [CabName]
