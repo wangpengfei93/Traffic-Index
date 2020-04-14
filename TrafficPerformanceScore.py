@@ -41,6 +41,8 @@ def getDatabaseConnection():
 @st.cache
 def getLoopDetectorLocation():
 	conn = getDatabaseConnection()
+	x =1
+	y =2
 
 	SQL_Query = pd.read_sql_query(
 	'''	SELECT Distinct [CabName]
@@ -612,7 +614,9 @@ def showCOVID19():
 				"* **March 9**: UW suspends on-site classes and finals. [\[link\]](https://www.washington.edu/coronavirus/2020/03/06/beginning-march-9-classes-and-finals-will-not-be-held-in-person-message-to-students/) \n"
 				"* **March 13**: Gov. Inslee announces statewide school closures, expansion of limits on large gatherings. [\[link\]](https://medium.com/wagovernor/inslee-announces-statewide-school-closures-expansion-of-limits-on-large-gatherings-63d442111438) \n"
 				"* **March 16**: Gov. Inslee announces statewide shutdown of restaurants, bars and expanded social gathering limits. [\[link\]](https://www.governor.wa.gov/news-media/inslee-statement-statewide-shutdown-restaurants-bars-and-limits-size-gatherings-expanded) \n"
-				"* **March 23**: Gov. Inslee announces \"Stay Home, Stay Healthy\" order. [\[link\]](https://www.governor.wa.gov/news-media/inslee-announces-stay-home-stay-healthy%C2%A0order)")
+				"* **March 23**: Gov. Inslee announces \"Stay Home, Stay Healthy\" order. [\[link\]](https://www.governor.wa.gov/news-media/inslee-announces-stay-home-stay-healthy%C2%A0order)\n"
+				"* **April 2**: Gov. Inslee extends \"Stay Home, Stay Healthy\" through May 4. [\[link\]](https://www.governor.wa.gov/news-media/inslee-extends-stay-home-stay-healthy-through-may-4))")
+
 	#################################################################
 	st.markdown("## COVID-19 Cases")
 	st.markdown("The following dynamic plot displays the progression of the coronavirus cases in Washington State.")
@@ -621,7 +625,7 @@ def showCOVID19():
 	#################################################################
 	st.markdown("## Impact of COVID-19 on Urban Traffic")
 	st.markdown("This section shows the impact of COVID-19 on urban traffic. "
-				"In the following chart, the trends of traffic indices and the coronavirus cases are displayed together.")
+				"In the following chart, the trends of daily traffic performance scores and the coronavirus cases are displayed together.")
 	
 
 	#################################################################
@@ -630,8 +634,10 @@ def showCOVID19():
 	df_COVID19 = update_and_get_covid19_info(url)
 	df_COVID19['date'] = df_COVID19['date'].astype('datetime64[ns]')
 	# st.write(df_COVID19)
-	sdate = datetime.datetime(2020, 2, 28)
-	edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
+	#sdate = datetime.datetime(2020, 2, 28)
+	#edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
+	sdate = st.date_input('Select a start date', value=datetime.datetime(2020, 2, 28))
+	edate = st.date_input('Select an end date', value=df_COVID19.loc[len(df_COVID19)-1, 'date'])
 	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
 
@@ -655,7 +661,7 @@ def showCOVID19():
 	# df_epv.rename(columns = {'avg_vol_gp':'Evening_GP', 'avg_vol_hov':'Evening_HOV'}, inplace = True) 
 	# df_pv = pd.merge(df_mpv, df_epv, on='date')
 	
-	data = pd.merge(df_DailyIndex, df_COVID19, on='date')
+	data = pd.merge(df_DailyIndex, df_COVID19, on='date', how='left')
 
 	# st.write(data['confirmed case'].max())
 	confirmed_case_axis_max = data['confirmed case'].max() + 500
@@ -667,12 +673,12 @@ def showCOVID19():
 	# Add traces for axis-2
 	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_gp'],
 							 mode='lines', line=dict(dash='dot', width=lw, color='#1f77b4'),
-							 name='Index - GP',
+							 name='TPS - GP',
 							 legendgroup='group2'),
 					secondary_y=False)
 	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_hov'],
 							 mode='lines', line=dict(dash='dot', width=lw, color='#2ca02c'),
-							 name='Index - HOV',
+							 name='TPS - HOV',
 							 legendgroup='group2'),
 					secondary_y=False)
 
