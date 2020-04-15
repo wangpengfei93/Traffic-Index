@@ -579,43 +579,43 @@ def get_data_from_sel(url, sel):
 
 
 def update_and_get_covid19_info(url):
+
     sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
     sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
     sel_death = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(4) > span:nth-child(1)'
     
     try:
-        date_list = get_data_from_sel(url, sel_date)
-        # the first and last items are not data
-        del date_list[len(date_list) - 1]
-        del date_list[0]
-        cases_list_0 = get_data_from_sel(url, sel_cases)
-        death_list_0 = get_data_from_sel(url, sel_death)
-        # remove the thousand seprators in cases_list_0 and death_list_0
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-        cases_list, death_list = [],[];
-        for n in cases_list_0:
-            cases_list.append(locale.atoi(n))
-        for n in death_list_0:
-            death_list.append(locale.atoi(n))
-
-        df_web = pd.DataFrame({'date':date_list, 'confirmed case':cases_list, 'death case':death_list})
-        # calculate new case based on confirmed case
-        df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
-        df_web.loc[0, 'new case'] = 0
-        df_web['date'] = df_web['date'].astype('datetime64[ns]')
 
         df_csv = getCOVID19Info()
-        df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
-        # merge df_web and df_csv
-        df_new = df_csv.append(df_web, ignore_index=True)
-        df_new = df_new.drop_duplicates(subset=['date'], keep='first')
+        date_list = get_data_from_sel(url, sel_date)
+        if df_csv.loc[len(df_csv)-1,'date'] != date_list[len(date_list)-2]:
 
-        if len(df_new) > len(df_csv):
+            # the first and last items are not data
+            del date_list[len(date_list) - 1]
+            del date_list[0]
+            cases_list_0 = get_data_from_sel(url, sel_cases)
+            death_list_0 = get_data_from_sel(url, sel_death)
+            # remove the thousand seprators in cases_list_0 and death_list_0
+            locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+            cases_list, death_list = [], []
+            for n in cases_list_0:
+                cases_list.append(locale.atoi(n))
+            for n in death_list_0:
+                death_list.append(locale.atoi(n))
+
+            df_web = pd.DataFrame({'date': date_list, 'confirmed case': cases_list, 'death case': death_list})
+            # calculate new case based on confirmed case
+            df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
+            df_web.loc[0, 'new case'] = 0
+            df_web['date'] = df_web['date'].astype('datetime64[ns]')
+            
+            # merge df_web and df_csv
+            df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
+            df_new = df_csv.append(df_web, ignore_index=True)
+            df_new = df_new.drop_duplicates(subset=['date'], keep='first')
             df_new.to_csv("Washington_COVID_Cases.csv", mode='w', header=True, index=False)
 
-        return getCOVID19Info()
-    
-    except:
+    finally:
         return getCOVID19Info()
 
 
@@ -701,7 +701,7 @@ def showSgementTPS():
 
 
 def showCOVID19():
-	
+
 	st.markdown("# Impact of COVID-19 on Urban Traffic")
 	st.markdown("## COVID-19 in Washington State")
 	st.markdown("Since the early March 2020, the coronavirus outbreak has taken hold in the United States. "
@@ -717,13 +717,15 @@ def showCOVID19():
 	#################################################################
 	st.markdown("## COVID-19 Cases")
 	st.markdown("The following dynamic plot displays the progression of the coronavirus cases in Washington State.")
+
 	st.write("<iframe src='https://public.flourish.studio/visualisation/1696713/embed' frameborder='0' scrolling='no' style='width:100%;height:300px;'></iframe><div style='width:100%!;margin-top:4px!important;text-align:right!important;'><a class='flourish-credit' href='https://public.flourish.studio/visualisation/1696713/?utm_source=embed&utm_campaign=visualisation/1696713' target='_top' style='text-decoration:none!important'><img alt='Made with Flourish' src='https://public.flourish.studio/resources/made_with_flourish.svg' style='width:105px!important;height:16px!important;border:none!important;margin:0!important;'> </a></div>", unsafe_allow_html=True)
-	
+
 	#################################################################
 	st.markdown("## Impact of COVID-19 on Urban Traffic")
 	st.markdown("This section shows the impact of COVID-19 on urban traffic. "
-				"In the following chart, the trends of daily traffic performance scores and the coronavirus cases are displayed together.")
-	
+				"In the following chart, the trends of daily traffic performance scores and the coronavirus cases in Washington State are displayed together. "
+				"Note: The coronavirus cases are caluculated since Feb. 28.")
+
 
 	#################################################################
 	# get COVID info and update csv
@@ -735,6 +737,7 @@ def showCOVID19():
 	#edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
 	sdate = st.date_input('Select a start date', value=datetime.datetime(2020, 2, 28))
 	edate = st.date_input('Select an end date', value=df_COVID19.loc[len(df_COVID19)-1, 'date'])
+	st.write('From ', sdate, ' to ', edate, ':')
 	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
 
