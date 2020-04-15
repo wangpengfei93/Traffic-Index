@@ -887,9 +887,7 @@ def showOtherMetrics():
 		# Create traces
 		fig = go.Figure()
 		for item in dataFields:
-			fig.add_trace(go.Scatter(x=data['date'], y=data[item],
-								 mode='lines', line=dict(dash='solid', width=lw),
-								 name=item))
+			fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
 
 		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Volume per Lane',
 						  legend=dict(x=.01, y=0.05),
@@ -903,7 +901,8 @@ def showOtherMetrics():
 		df_pv.columns = ['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV']
 
 		dataFields = st.multiselect('Show Data Type', list(df_pv.columns.values),
-									default=['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'])
+				default=['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'])
+
 
 		st.write(df_pv[dataFields])
 		st.markdown("Download the tabular data as a CSV file:")
