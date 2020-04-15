@@ -167,7 +167,7 @@ def GenerateGeo(TPS):
 	open(map_path, 'w').write(m._repr_html_())
 
 	# st.markdown('Below is the traffic performance score by segments:' + dt_string)
-	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%; height:400px;"> </iframe>', unsafe_allow_html=True)
+	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%; height:480px;"> </iframe>', unsafe_allow_html=True)
 
 
 def	GenerateGeoAnimation(TPS):
