@@ -100,6 +100,9 @@ def GenerateGeo(TPS):
 	segment = GetSegmentGeo()
 	# merge TPS with segment data
 	segment.rename(columns={"segmentid": "segmentID"}, inplace = True)
+	# st.write(segment[['segmentID', 'route_name', 'direction_name', 'name']])
+	# st.write(TPS)
+	# st.write(segment[['segmentID', 'route_name', 'direction_name', 'name']].merge(TPS, on = ['segmentID'], how = 'inner'))
 	data = segment.merge(TPS, on = ['segmentID'], how = 'left')
 
 	data['TrafficIndex_GP'].fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
@@ -172,6 +175,7 @@ def GenerateGeo(TPS):
 
 
 def	GenerateGeoAnimation(TPS):
+
 	segment = GetSegmentGeo()
 	# merge TPS with segment data
 	segment.rename(columns={"segmentid": "segmentID"}, inplace = True)
