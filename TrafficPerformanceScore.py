@@ -903,6 +903,7 @@ def showOtherMetrics():
 		dataFields = st.multiselect('Show Data Type', list(df_pv.columns.values),
 				default=['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'])
 
+
 		st.write(df_pv[dataFields])
 		st.markdown("Download the tabular data as a CSV file:")
 		st.markdown(get_table_download_link(df_pv[dataFields]), unsafe_allow_html=True)
