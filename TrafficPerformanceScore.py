@@ -15,6 +15,7 @@ from requests_html import HTMLSession
 import locale
 import folium
 import base64
+import copy
 
 from sys import platform 
 if platform == "linux" or platform == "linux2":
@@ -41,9 +42,6 @@ def getDatabaseConnection():
 @st.cache
 def getLoopDetectorLocation():
 	conn = getDatabaseConnection()
-	x =1
-	y =2
-
 	SQL_Query = pd.read_sql_query(
 	'''	SELECT Distinct [CabName]
 		      ,cab.[Lat]
@@ -223,6 +221,118 @@ def getEveningPeakVolume(sdate, edate):
 def getCOVID19Info():
 	return pd.read_csv('Washington_COVID_Cases.csv') 
 
+def showCOVID19Figure():
+	# get COVID info and update csv
+	url = 'https://en.wikipedia.org/wiki/Template:2019%E2%80%9320_coronavirus_pandemic_data/United_States/Washington_State_medical_cases_chart'
+	df_COVID19 = update_and_get_covid19_info(url)
+	df_COVID19['date'] = df_COVID19['date'].astype('datetime64[ns]')
+	# st.write(df_COVID19)
+	sdate = datetime.datetime(2020, 2, 28)
+	edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
+	# sdate = st.date_input('Select a start date', value=datetime.datetime(2020, 2, 28))
+	# edate = st.date_input('Select an end date', value=df_COVID19.loc[len(df_COVID19)-1, 'date'])
+	# daily index
+	df_DailyIndex = getDailyIndex(sdate, edate)
+
+	# # remove outliers from HOV traffic index
+	# df_DailyIndex.loc[df_DailyIndex['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+
+	df_DailyIndex['date'] = df_DailyIndex['date'].astype('datetime64[ns]')
+	df_DailyIndex = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
+
+	df_DailyIndex['daily_index_gp'] = df_DailyIndex['daily_index_gp'] * 100
+	# df_DailyIndex['daily_index_gp'] = df_DailyIndex['daily_index_gp'].astype('int64')
+	df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'] * 100
+	# df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'].astype('int64')
+
+	# # peak volume
+	# df_mpv = getMorningPeakVolume(sdate, edate)
+	# df_mpv['date'] = df_mpv['date'].astype('datetime64[ns]')
+	# df_mpv.rename(columns = {'avg_vol_gp':'Morning_GP', 'avg_vol_hov':'Morning_HOV'}, inplace = True) 
+	# df_epv = getEveningPeakVolume(sdate, edate)
+	# df_epv['date'] = df_epv['date'].astype('datetime64[ns]')
+	# df_epv.rename(columns = {'avg_vol_gp':'Evening_GP', 'avg_vol_hov':'Evening_HOV'}, inplace = True) 
+	# df_pv = pd.merge(df_mpv, df_epv, on='date')
+	
+	data = pd.merge(df_DailyIndex, df_COVID19, on='date', how='left')
+
+	# st.write(data['confirmed case'].max())
+	confirmed_case_axis_max = data['confirmed case'].max() + 500
+	lw = 2  # line width
+
+	# Create figure with secondary y-axis
+	fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+	# Add traces for axis-2
+	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_gp'],
+							 mode='lines', line=dict(dash='dot', width=lw, color='#1f77b4'),
+							 name='Network-wide TPS - GP',
+							 legendgroup='group2'),
+					secondary_y=False)
+	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_hov'],
+							 mode='lines', line=dict(dash='dot', width=lw, color='#2ca02c'),
+							 name='Network-wide TPS - HOV',
+							 legendgroup='group2'),
+					secondary_y=False)
+
+	# Add traces for axis-1
+	fig.add_trace(go.Scatter(x=data['date'], y=data['confirmed case'],
+							 mode='lines+markers', line=dict(dash='solid', width=lw, color='red'),
+							 name='Confirmed Cases',
+							 legendgroup='group1'),
+					secondary_y=True)
+	fig.add_trace(go.Scatter(x=data['date'], y=data['new case'],
+							 mode='lines+markers', line=dict(dash='solid', width=lw, color='orange'),
+							 name='New Cases',
+							 legendgroup='group1'),
+					secondary_y=True)
+	fig.add_trace(go.Scatter(x=data['date'], y=data['death case'],
+	 						 mode='lines+markers', line=dict(dash='solid', width=lw, color='black'),
+	 						 name='Total Death',
+	 						 legendgroup='group1'),
+	 				secondary_y=True)
+	
+
+	fig.update_traces(textposition='top center')
+	# Set x-axis title
+	fig.update_xaxes(title_text="Date")
+	# Set y-axes titles
+	fig.update_yaxes(title_text="Daily Traffic Performance Score (%)", 
+						range=[70, 100], 
+						showline=True, 
+						linecolor='rgb(204, 204, 204)', 
+						linewidth=2, 
+						showticklabels=True, 
+						ticks='outside', 
+						secondary_y=False)
+	fig.update_yaxes(title_text="COVID-19 Case Amount",
+						range=[0, confirmed_case_axis_max], 
+						showline=True, 
+						linecolor='rgb(204, 204, 204)', 
+						linewidth=2, 
+						showticklabels=True, 
+						ticks='outside', 
+						secondary_y=True)
+	fig.update_layout(xaxis=dict(
+						    showline=True,
+						    showgrid=False,
+						    showticklabels=True,
+						    linecolor='rgb(204, 204, 204)',
+						    linewidth=2,
+						    ticks='outside',
+						    tickfont=dict(
+						        family='Arial',
+						        size=12,
+						        color='rgb(82, 82, 82)',
+						    ),
+						),
+						legend=dict(x= 0.4, y=1.3, orientation="h"),
+					  	margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), 
+					  	width = 700, 
+					  	height = 450,
+					  	plot_bgcolor='white')
+	st.plotly_chart(fig)
+
 #####################################################
 # display functions
 #####################################################
@@ -237,7 +347,7 @@ def IntroduceTrafficIndex():
 	###########
 	# Content #
 	###########
-	st.markdown("# Traffic Performance Score in Seattle Area")
+	st.markdown("# Traffic Performance Score in the Greater Seattle Area")
 	st.markdown("## Introduction to Traffic Performance Score")
 	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
 				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Seattle area. "
@@ -249,28 +359,40 @@ def IntroduceTrafficIndex():
 	
 	st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
 	
+
 	#################################################################
-	st.markdown("## Traffic Performance Score")
-
+	st.markdown("## Impact of COVID-19 on Traffic Changes")
 	
+	showCOVID19Figure()
 
-	st.markdown("### Segment-baed TPS Map")
+	#################################################################
+	st.markdown("## Segment-based Traffic Performance Score")
 
-	date = st.date_input('Pick a date', value = datetime.datetime.now().date())
+	date = st.date_input('Select a date', value = datetime.datetime.now().date())
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
 	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
-	
 	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
-	df_SegTPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
-		
-	GenerateGeoAnimation(df_SegTPS)
 
-	st.markdown("### Variation of Daily Network-wide TPS")
+	#################################################################
+	st.markdown("### Segment-based TPS on Map")			
+	GenerateGeoAnimation(copy.copy(df_SegTPS))
 
-	# date = st.date_input('Please select a date', datetime.datetime.now().date())
-	# date = datetime.datetime.now().date()
-	df_TI = getTrafficIndex(date)
-	
+	#################################################################
+	st.markdown("### Segment-based TPS Chart")
+
+	segments = getSegments()
+	segments['route_dir'] = 'Route ' + segments['route'].astype(int).astype(str) + '\t, ' + segments['direction'] + 'B'
+	segments['milepost_pair'] = 'Milepost ( ' + segments['milepost_small'].astype(str) + '\t, ' + segments['milepost_large'].astype(str) +' )'
+	segments_route_dir = segments['route_dir'].drop_duplicates()
+	route_dir = st.selectbox("Select a route:", segments_route_dir.values.tolist())
+
+	segments_milepost_pair = segments[segments['route_dir'] == route_dir]['milepost_pair']
+	milepost_pair = st.selectbox("Select a segment:", segments_milepost_pair.values.tolist())
+
+	segmentID = segments[(segments['route_dir'] == route_dir) & (segments['milepost_pair'] == milepost_pair)]['segmentid']
+
+	df_TI = df_SegTPS[df_SegTPS['segmentid'] == segmentID.values[0]]
+
 	# remove outliers from HOV traffic index
 	df_TI.loc[df_TI['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
 
@@ -278,9 +400,6 @@ def IntroduceTrafficIndex():
 	# df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'].astype('int64')
 	df_TI['trafficindex_hov'] = df_TI['trafficindex_hov'] * 100
 	# df_TI['trafficindex_hov'] = df_TI['trafficindex_hov'].astype('int64')
-
-	# df_TI['trafficindex_gp'] = df_TI['trafficindex_gp'] * 65
-	# st.line_chart(df_TI[['trafficindex_gp', 'avg_spd_gp']])
 
 	sampling_interval = 1
 	data = df_TI.loc[::sampling_interval, ['time', 'trafficindex_gp', 'trafficindex_hov']]
@@ -307,31 +426,6 @@ def IntroduceTrafficIndex():
 
 	# dataFields = st.multiselect('Show Data',  list(df_TI.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
 	# st.write(df_TI[dataFields])
-
-	#################################################################
-	st.markdown("## Data Source")
-	st.markdown("The TPS is calculated based on data collected from more than 44800 inductive loop detectors deployed on freeways in Seattle, WA area. "
-				"Freeways include: I-5, I-90, I-99, I-167, I-405, and SR-520. The raw data comes from Washington State Department of Transportation (WSDOT). "
-				"Representative detectors are shown in the following map. ")
-	showLoopDetectorMap()
-
-	#################################################################
-	st.markdown("## Traffic Performance Score Calculation")
-	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
-				"Each detector's meta data includes detector category, route, milepost, director, direction, address. "
-				"Based on the consecutive detectors' location information, we separate the freeways into segments, "
-				"each of which only contains one loop detector per lane. We consider a road segment's length is the corresponding detector's covered length. "
-				"The time interval of the data is one-minute. ")
-	st.markdown("The **Traffic Performance Score** (**TPS**) at time $t$ is calculated using the following equation:")
-	st.latex(r'''
-		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n S_t^i * V_t^i * D_t^i }{ \displaystyle\sum_{i=1}^n V_t^i * D_t^i * 65 } * 100\%
-		''')
-	st.markdown("where $S_t^i$, $V_t^i$, and $D_t^i$ represent the **S**peed, **V**olume, covered **D**istance "
-				"of each road segment $i$ at time $t$, respectively. "
-				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
-				"The unit of covered distance is mile.")
-	st.markdown("In this way, the **TPS** is a value ranges from 0 to 1.0 ($TPS \in [0,1.0]$). "
-				"The closer to one the **TPS** is, the better the overall network-wide traffic condition is. ")
 
 
 
@@ -451,7 +545,10 @@ def showTrafficIndex():
 		df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'] * 100
 		# df_TI_range.columns = ""
 
-		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
+		# rename column headers
+		df_TI_range.columns = ['Time', 'AVG_Spd_GP', 'AVG_Vol_GP', 'TPS_GP', 'AVG_Spd_HOV', 'AVG_Vol_HOV', 'TPS_HOV']
+	
+		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['Time', 'TPS_GP', 'TPS_HOV'] )
 		st.write(df_TI_range[dataFields])
 
 		st.markdown("Download the tabular data as a CSV file:")
@@ -620,7 +717,8 @@ def showCOVID19():
 	#################################################################
 	st.markdown("## COVID-19 Cases")
 	st.markdown("The following dynamic plot displays the progression of the coronavirus cases in Washington State.")
-	st.write("<iframe src='https://public.flourish.studio/visualisation/1696713/embed' frameborder='0' scrolling='no' style='width:100%;height:600px;'></iframe><div style='width:100%!;margin-top:4px!important;text-align:right!important;'><a class='flourish-credit' href='https://public.flourish.studio/visualisation/1696713/?utm_source=embed&utm_campaign=visualisation/1696713' target='_top' style='text-decoration:none!important'><img alt='Made with Flourish' src='https://public.flourish.studio/resources/made_with_flourish.svg' style='width:105px!important;height:16px!important;border:none!important;margin:0!important;'> </a></div>", unsafe_allow_html=True)
+
+	st.write("<iframe src='https://public.flourish.studio/visualisation/1696713/embed' frameborder='0' scrolling='no' style='width:100%;height:300px;'></iframe><div style='width:100%!;margin-top:4px!important;text-align:right!important;'><a class='flourish-credit' href='https://public.flourish.studio/visualisation/1696713/?utm_source=embed&utm_campaign=visualisation/1696713' target='_top' style='text-decoration:none!important'><img alt='Made with Flourish' src='https://public.flourish.studio/resources/made_with_flourish.svg' style='width:105px!important;height:16px!important;border:none!important;margin:0!important;'> </a></div>", unsafe_allow_html=True)
 
 	#################################################################
 	st.markdown("## Impact of COVID-19 on Urban Traffic")
@@ -745,7 +843,6 @@ def showCOVID19():
 	st.markdown("Download COVID-19 related data as a CSV file:")
 	st.markdown(get_table_download_link(data), unsafe_allow_html=True)
 
-
 def showOtherMetrics():
 	###########
 	# Sidebar #
@@ -793,6 +890,34 @@ def showOtherMetrics():
 		st.plotly_chart(fig)
 		st.markdown("Morning rush hours: 6:00AM-9:00AM; Evening rush hours: 3:00PM-6:00PM")
 	#st.line_chart(df_pv[dataFields], use_container_width=True)
+
+
+def showAbout():
+	#################################################################
+	st.markdown("## Traffic Performance Score Calculation")
+	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
+				"Each detector's meta data includes detector category, route, milepost, director, direction, address. "
+				"Based on the consecutive detectors' location information, we separate the freeways into segments, "
+				"each of which only contains one loop detector per lane. We consider a road segment's length is the corresponding detector's covered length. "
+				"The time interval of the data is one-minute. ")
+	st.markdown("The **Traffic Performance Score** (**TPS**) at time $t$ is calculated using the following equation:")
+	st.latex(r'''
+		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n V_t^i * Q_t^i * L^i }{ \displaystyle\sum_{i=1}^n 65 * Q_t^i * L^i } * 100\%
+		''')
+	st.markdown("where $V_t^i$ and $Q_t^i$, and $D^i$ represent the *speed* and *volume* "
+				"of each road segment $i$ at time $t$. $L^i$ is the length of $i$-th detector's covered road segment."
+				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
+				"The unit of covered distance is mile.")
+	st.markdown("In this way, the **TPS** is a value ranges from 0 to 1.0 ($TPS \in [0,1.0]$). "
+				"The closer to one the **TPS** is, the better the overall network-wide traffic condition is. ")
+
+	#################################################################
+	st.markdown("## Data Source")
+	st.markdown("The TPS is calculated based on data collected from more than 44800 inductive loop detectors deployed on freeways in Seattle, WA area. "
+				"Freeways include: I-5, I-90, I-99, I-167, I-405, and SR-520. The raw data comes from Washington State Department of Transportation (WSDOT). "
+				"Representative detectors are shown in the following map. ")
+	showLoopDetectorMap()
+
 
 def showLoopDetectorMap():	
 	df_loop_location = getLoopDetectorLocation()
@@ -848,7 +973,7 @@ def main():
 
 	st.sidebar.title("Traffic Performance Score")
 	app_mode = st.sidebar.radio("Navitation",
-	        ["Home", "Network-based TPS", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics"])
+	        ["Home", "Network-based TPS", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics", "About"])
 	# st.sidebar.markdown("[![this is an image link](./images/STARLab.png)](https://streamlit.io)")
 	if  app_mode == "Home":
 		IntroduceTrafficIndex()
@@ -860,22 +985,28 @@ def main():
 		showCOVID19()
 	elif app_mode == "Other Traffic Metrics":
 		showOtherMetrics()
+	elif app_mode == "About":
+		showAbout()
 
 
-	st.sidebar.title("About")
+
+	# st.sidebar.title("About")
+	# st.sidebar.info(
+ #        "This an open source project developed and maintained by the "
+ #        "*Artificial Intelligence GROUP* in the [Smart Transportation Application and Research Lab (**STAR Lab**)](http://www.uwstarlab.org/) "
+ #        "at the [University of Washington](https://www.washington.edu/). "
+	        
+	# )
+
+	st.sidebar.title("Contact Us")
 	st.sidebar.info(
-        "This an open source project developed and maintained by the "
+		"This an open source project developed and maintained by the "
         "*Artificial Intelligence GROUP* in the [Smart Transportation Application and Research Lab (**STAR Lab**)](http://www.uwstarlab.org/) "
         "at the [University of Washington](https://www.washington.edu/). "
-	        
-	)
-
-	st.sidebar.title("Contribute")
-	st.sidebar.info(
-		"To inquire about potential collaboration, "
-		"please contact the **Principal Investigator**: "
-		""
-        "[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) ([yinhai@uw.edu](mailto:yinhai@uw.edu))."
+		"For more information, "
+		"please contact "
+        "[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) "
+        "([yinhai@uw.edu](mailto:yinhai@uw.edu))."
 	)
 
 	image_starlab = Image.open('images/STARLab.png')
