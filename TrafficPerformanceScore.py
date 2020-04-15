@@ -266,12 +266,12 @@ def showCOVID19Figure():
 	# Add traces for axis-2
 	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_gp'],
 							 mode='lines', line=dict(dash='dot', width=lw, color='#1f77b4'),
-							 name='TPS - GP',
+							 name='Network-wide TPS - GP',
 							 legendgroup='group2'),
 					secondary_y=False)
 	fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_hov'],
 							 mode='lines', line=dict(dash='dot', width=lw, color='#2ca02c'),
-							 name='TPS - HOV',
+							 name='Network-wide TPS - HOV',
 							 legendgroup='group2'),
 					secondary_y=False)
 
@@ -326,7 +326,7 @@ def showCOVID19Figure():
 						        color='rgb(82, 82, 82)',
 						    ),
 						),
-						legend=dict(x= 0.5, y=1.3, orientation="h"),
+						legend=dict(x= 0.4, y=1.3, orientation="h"),
 					  	margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), 
 					  	width = 700, 
 					  	height = 450,
@@ -347,7 +347,7 @@ def IntroduceTrafficIndex():
 	###########
 	# Content #
 	###########
-	st.markdown("# Traffic Performance Score in Seattle Area")
+	st.markdown("# Traffic Performance Score in the Greater Seattle Area")
 	st.markdown("## Introduction to Traffic Performance Score")
 	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
 				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Seattle area. "
@@ -361,22 +361,20 @@ def IntroduceTrafficIndex():
 	
 
 	#################################################################
-	st.markdown("## Impact of COVID-19 on Traffic Changes in the Greater Seattle Area")
+	st.markdown("## Impact of COVID-19 on Traffic Changes")
 	
 	showCOVID19Figure()
 
 	#################################################################
-	st.markdown("## Traffic Performance Score")
+	st.markdown("## Segment-based Traffic Performance Score")
 
-	#################################################################
-	st.markdown("### Segment-based TPS Map")
-
-	date = st.date_input('Pick a date', value = datetime.datetime.now().date())
+	date = st.date_input('Select a date', value = datetime.datetime.now().date())
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
 	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
-	
 	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
-			
+
+	#################################################################
+	st.markdown("### Segment-based TPS on Map")			
 	GenerateGeoAnimation(copy.copy(df_SegTPS))
 
 	#################################################################
@@ -547,7 +545,10 @@ def showTrafficIndex():
 		df_TI_range['trafficindex_hov'] = df_TI_range['trafficindex_hov'] * 100
 		# df_TI_range.columns = ""
 
-		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
+		# rename column headers
+		df_TI_range.columns = ['Time', 'AVG_Spd_GP', 'AVG_Vol_GP', 'TPS_GP', 'AVG_Spd_HOV', 'AVG_Vol_HOV', 'TPS_HOV']
+	
+		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['Time', 'TPS_GP', 'TPS_HOV'] )
 		st.write(df_TI_range[dataFields])
 
 		st.markdown("Download the tabular data as a CSV file:")
@@ -1001,7 +1002,7 @@ def main():
         "at the [University of Washington](https://www.washington.edu/). "
 		"For more information, "
 		"please contact "
-        #"[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) "
+        "[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) "
         "([yinhai@uw.edu](mailto:yinhai@uw.edu))."
 	)
 
