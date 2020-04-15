@@ -174,7 +174,8 @@ def GenerateGeo(TPS):
 
 
 def	GenerateGeoAnimation(TPS):
-
+	TPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+	
 	segment = GetSegmentGeo()
 	# merge TPS with segment data
 	segment.rename(columns={"segmentid": "segmentID"}, inplace = True)

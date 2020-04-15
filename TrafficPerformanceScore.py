@@ -711,7 +711,7 @@ def showCOVID19():
 				"* **March 13**: Gov. Inslee announces statewide school closures, expansion of limits on large gatherings. [\[link\]](https://medium.com/wagovernor/inslee-announces-statewide-school-closures-expansion-of-limits-on-large-gatherings-63d442111438) \n"
 				"* **March 16**: Gov. Inslee announces statewide shutdown of restaurants, bars and expanded social gathering limits. [\[link\]](https://www.governor.wa.gov/news-media/inslee-statement-statewide-shutdown-restaurants-bars-and-limits-size-gatherings-expanded) \n"
 				"* **March 23**: Gov. Inslee announces \"Stay Home, Stay Healthy\" order. [\[link\]](https://www.governor.wa.gov/news-media/inslee-announces-stay-home-stay-healthy%C2%A0order)\n"
-				"* **April 2**: Gov. Inslee extends \"Stay Home, Stay Healthy\" through May 4. [\[link\]](https://www.governor.wa.gov/news-media/inslee-extends-stay-home-stay-healthy-through-may-4))")
+				"* **April 2**: Gov. Inslee extends \"Stay Home, Stay Healthy\" through May 4. [\[link\]](https://www.governor.wa.gov/news-media/inslee-extends-stay-home-stay-healthy-through-may-4)")
 
 	#################################################################
 	st.markdown("## COVID-19 Cases")
@@ -890,13 +890,6 @@ def showOtherMetrics():
 
 def showAbout():
 	#################################################################
-	st.markdown("## Data Source")
-	st.markdown("The TPS is calculated based on data collected from more than 44800 inductive loop detectors deployed on freeways in Seattle, WA area. "
-				"Freeways include: I-5, I-90, I-99, I-167, I-405, and SR-520. The raw data comes from Washington State Department of Transportation (WSDOT). "
-				"Representative detectors are shown in the following map. ")
-	showLoopDetectorMap()
-
-	#################################################################
 	st.markdown("## Traffic Performance Score Calculation")
 	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
 				"Each detector's meta data includes detector category, route, milepost, director, direction, address. "
@@ -905,14 +898,21 @@ def showAbout():
 				"The time interval of the data is one-minute. ")
 	st.markdown("The **Traffic Performance Score** (**TPS**) at time $t$ is calculated using the following equation:")
 	st.latex(r'''
-		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n S_t^i * V_t^i * D_t^i }{ \displaystyle\sum_{i=1}^n V_t^i * D_t^i * 65 } * 100\%
+		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n V_t^i * Q_t^i * L^i }{ \displaystyle\sum_{i=1}^n 65 * Q_t^i * L^i } * 100\%
 		''')
-	st.markdown("where $S_t^i$, $V_t^i$, and $D_t^i$ represent the **S**peed, **V**olume, covered **D**istance "
-				"of each road segment $i$ at time $t$, respectively. "
+	st.markdown("where $V_t^i$ and $Q_t^i$, and $D^i$ represent the *speed* and *volume* "
+				"of each road segment $i$ at time $t$. $L^i$ is the length of $i$-th detector's covered road segment."
 				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
 				"The unit of covered distance is mile.")
 	st.markdown("In this way, the **TPS** is a value ranges from 0 to 1.0 ($TPS \in [0,1.0]$). "
 				"The closer to one the **TPS** is, the better the overall network-wide traffic condition is. ")
+
+	#################################################################
+	st.markdown("## Data Source")
+	st.markdown("The TPS is calculated based on data collected from more than 44800 inductive loop detectors deployed on freeways in Seattle, WA area. "
+				"Freeways include: I-5, I-90, I-99, I-167, I-405, and SR-520. The raw data comes from Washington State Department of Transportation (WSDOT). "
+				"Representative detectors are shown in the following map. ")
+	showLoopDetectorMap()
 
 
 def showLoopDetectorMap():	
@@ -986,20 +986,23 @@ def main():
 
 
 
-	st.sidebar.title("About")
+	# st.sidebar.title("About")
+	# st.sidebar.info(
+ #        "This an open source project developed and maintained by the "
+ #        "*Artificial Intelligence GROUP* in the [Smart Transportation Application and Research Lab (**STAR Lab**)](http://www.uwstarlab.org/) "
+ #        "at the [University of Washington](https://www.washington.edu/). "
+	        
+	# )
+
+	st.sidebar.title("Contact Us")
 	st.sidebar.info(
-        "This an open source project developed and maintained by the "
+		"This an open source project developed and maintained by the "
         "*Artificial Intelligence GROUP* in the [Smart Transportation Application and Research Lab (**STAR Lab**)](http://www.uwstarlab.org/) "
         "at the [University of Washington](https://www.washington.edu/). "
-	        
-	)
-
-	st.sidebar.title("Contribute")
-	st.sidebar.info(
-		"To inquire about potential collaboration, "
-		"please contact the **Principal Investigator**: "
-		""
-        "[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) ([yinhai@uw.edu](mailto:yinhai@uw.edu))."
+		"For more information, "
+		"please contact "
+        #"[Prof. Yinhai Wang](https://www.ce.washington.edu/facultyfinder/yinhai-wang) "
+        "([yinhai@uw.edu](mailto:yinhai@uw.edu))."
 	)
 
 	image_starlab = Image.open('images/STARLab.png')
