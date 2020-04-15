@@ -348,20 +348,21 @@ def IntroduceTrafficIndex():
 	# Content #
 	###########
 	st.markdown("# Traffic Performance Score in the Greater Seattle Area")
-	st.markdown("## Introduction to Traffic Performance Score")
+	# st.markdown("## Introduction to Traffic Performance Score")
 	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
-				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Seattle area. "
+				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Greater Seattle area. "
 				"With this website, you can view "
-				"\n * The TPS with different temporal resolutions, ranging from one minute to one day. "
-				"\n * The TPS of general purpose (GP) and HOV lanes. "
-				"\n * Impact of COVID-19 on urban traffic reflected by the TPS. "
+				"\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
+				"\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
+				"\n * Traffic changes in response to COVID-19 reflected by the TPS. "
 				"\n * Other traffic performance metrics. " )
-	
-	st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
+	st.markdown("The TPS calculation and the data source are described in the About page. The **TPS** is a value ranges from 0% to 100%. "
+				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is.")
+	st.markdown("To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
 	
 
 	#################################################################
-	st.markdown("## Impact of COVID-19 on Traffic Changes")
+	st.markdown("## Traffic Changes in Response to COVID-19")
 	
 	showCOVID19Figure()
 
@@ -374,7 +375,7 @@ def IntroduceTrafficIndex():
 	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
 
 	#################################################################
-	st.markdown("### Segment-based TPS on Map")			
+	st.markdown("### Segment-based TPS on Animated Map")			
 	GenerateGeoAnimation(copy.copy(df_SegTPS))
 
 	#################################################################
@@ -579,43 +580,43 @@ def get_data_from_sel(url, sel):
 
 
 def update_and_get_covid19_info(url):
+
     sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
     sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
     sel_death = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(4) > span:nth-child(1)'
     
     try:
-        date_list = get_data_from_sel(url, sel_date)
-        # the first and last items are not data
-        del date_list[len(date_list) - 1]
-        del date_list[0]
-        cases_list_0 = get_data_from_sel(url, sel_cases)
-        death_list_0 = get_data_from_sel(url, sel_death)
-        # remove the thousand seprators in cases_list_0 and death_list_0
-        locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
-        cases_list, death_list = [],[];
-        for n in cases_list_0:
-            cases_list.append(locale.atoi(n))
-        for n in death_list_0:
-            death_list.append(locale.atoi(n))
-
-        df_web = pd.DataFrame({'date':date_list, 'confirmed case':cases_list, 'death case':death_list})
-        # calculate new case based on confirmed case
-        df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
-        df_web.loc[0, 'new case'] = 0
-        df_web['date'] = df_web['date'].astype('datetime64[ns]')
 
         df_csv = getCOVID19Info()
-        df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
-        # merge df_web and df_csv
-        df_new = df_csv.append(df_web, ignore_index=True)
-        df_new = df_new.drop_duplicates(subset=['date'], keep='first')
+        date_list = get_data_from_sel(url, sel_date)
+        if df_csv.loc[len(df_csv)-1,'date'] != date_list[len(date_list)-2]:
 
-        if len(df_new) > len(df_csv):
+            # the first and last items are not data
+            del date_list[len(date_list) - 1]
+            del date_list[0]
+            cases_list_0 = get_data_from_sel(url, sel_cases)
+            death_list_0 = get_data_from_sel(url, sel_death)
+            # remove the thousand seprators in cases_list_0 and death_list_0
+            locale.setlocale(locale.LC_ALL, 'en_US.UTF-8')
+            cases_list, death_list = [], []
+            for n in cases_list_0:
+                cases_list.append(locale.atoi(n))
+            for n in death_list_0:
+                death_list.append(locale.atoi(n))
+
+            df_web = pd.DataFrame({'date': date_list, 'confirmed case': cases_list, 'death case': death_list})
+            # calculate new case based on confirmed case
+            df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
+            df_web.loc[0, 'new case'] = 0
+            df_web['date'] = df_web['date'].astype('datetime64[ns]')
+            
+            # merge df_web and df_csv
+            df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
+            df_new = df_csv.append(df_web, ignore_index=True)
+            df_new = df_new.drop_duplicates(subset=['date'], keep='first')
             df_new.to_csv("Washington_COVID_Cases.csv", mode='w', header=True, index=False)
 
-        return getCOVID19Info()
-    
-    except:
+    finally:
         return getCOVID19Info()
 
 
@@ -701,7 +702,7 @@ def showSgementTPS():
 
 
 def showCOVID19():
-	
+
 	st.markdown("# Impact of COVID-19 on Urban Traffic")
 	st.markdown("## COVID-19 in Washington State")
 	st.markdown("Since the early March 2020, the coronavirus outbreak has taken hold in the United States. "
@@ -717,13 +718,15 @@ def showCOVID19():
 	#################################################################
 	st.markdown("## COVID-19 Cases")
 	st.markdown("The following dynamic plot displays the progression of the coronavirus cases in Washington State.")
+
 	st.write("<iframe src='https://public.flourish.studio/visualisation/1696713/embed' frameborder='0' scrolling='no' style='width:100%;height:300px;'></iframe><div style='width:100%!;margin-top:4px!important;text-align:right!important;'><a class='flourish-credit' href='https://public.flourish.studio/visualisation/1696713/?utm_source=embed&utm_campaign=visualisation/1696713' target='_top' style='text-decoration:none!important'><img alt='Made with Flourish' src='https://public.flourish.studio/resources/made_with_flourish.svg' style='width:105px!important;height:16px!important;border:none!important;margin:0!important;'> </a></div>", unsafe_allow_html=True)
-	
+
 	#################################################################
 	st.markdown("## Impact of COVID-19 on Urban Traffic")
 	st.markdown("This section shows the impact of COVID-19 on urban traffic. "
-				"In the following chart, the trends of daily traffic performance scores and the coronavirus cases are displayed together.")
-	
+				"In the following chart, the trends of daily traffic performance scores and the coronavirus cases in Washington State are displayed together. "
+				"Note: The coronavirus cases are caluculated since Feb. 28.")
+
 
 	#################################################################
 	# get COVID info and update csv
@@ -735,6 +738,7 @@ def showCOVID19():
 	#edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
 	sdate = st.date_input('Select a start date', value=datetime.datetime(2020, 2, 28))
 	edate = st.date_input('Select an end date', value=df_COVID19.loc[len(df_COVID19)-1, 'date'])
+	st.write('From ', sdate, ' to ', edate, ':')
 	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
 
@@ -892,7 +896,7 @@ def showOtherMetrics():
 def showAbout():
 	#################################################################
 	st.markdown("## Traffic Performance Score Calculation")
-	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
+	st.markdown("The raw data contains lane-wise speed, volume, and occupancy information collected by each loop detector. "
 				"Each detector's meta data includes detector category, route, milepost, director, direction, address. "
 				"Based on the consecutive detectors' location information, we separate the freeways into segments, "
 				"each of which only contains one loop detector per lane. We consider a road segment's length is the corresponding detector's covered length. "
@@ -905,8 +909,9 @@ def showAbout():
 				"of each road segment $i$ at time $t$. $L^i$ is the length of $i$-th detector's covered road segment."
 				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
 				"The unit of covered distance is mile.")
-	st.markdown("In this way, the **TPS** is a value ranges from 0 to 1.0 ($TPS \in [0,1.0]$). "
-				"The closer to one the **TPS** is, the better the overall network-wide traffic condition is. ")
+	st.markdown("In this way, the **TPS** is a value ranges from 0% to 100%. "
+			#	"($TPS \in [0, 100]$). "
+				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. ")
 
 	#################################################################
 	st.markdown("## Data Source")
