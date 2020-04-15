@@ -13,7 +13,7 @@ from folium.features import GeoJson, GeoJsonTooltip
 from folium import plugins
 import fiona
 import fiona.crs
-
+# import pdb
 
 from sys import platform 
 if platform == "linux" or platform == "linux2":
@@ -49,7 +49,7 @@ def GetSegmentGeo():
 
 	geo_key = []
 	for i in range(len(geo)):
-	    geo_key.append(str(geo['route'][i]) + '_' + geo['direct'][i].upper() + '_' + str(geo['mile_min'][i]) + '_' + str(geo['mile_max'][i]))
+	    geo_key.append(str(geo['route'][i]) + '_' + geo['direct'][i].upper() + '_' + str(int(geo['mile_min'][i])) + '_' + str(int(geo['mile_max'][i])))
 	geo['key'] = geo_key
 
 	# load segments ids
@@ -63,9 +63,10 @@ def GetSegmentGeo():
 
 	seg_key = []
 	for i in range(len(segmentIDs)):
-	    seg_key.append(str(segmentIDs['route'][i]) + '_' + segmentIDs['mpdirection'][i].upper() + '_' + str(segmentIDs['milepost_small'][i]) + '_' + str(segmentIDs['milepost_large'][i]))
+	    seg_key.append(str(segmentIDs['route'][i]) + '_' + segmentIDs['mpdirection'][i].upper() + '_' + str(int(segmentIDs['milepost_small'][i])) + '_' + str(int(segmentIDs['milepost_large'][i])))
 	segmentIDs['key'] = seg_key
 	segment = geo.merge(segmentIDs, on = ['key'], how = 'inner')
+	# pdb.set_trace()
 	# segment.fillna(0, inplace = True)
     
     # create name
