@@ -1,5 +1,5 @@
-# Traffic-Index
-Real-Time Freeway Traffic Performance Score in Greater Seattle Area
+# Traffic Performance Score
+Real Time Freeway Traffic Performance Score in Greater Seattle Area
 
 ![alt text](https://github.com/AI-Group-STAR-Lab-UW/Traffic-Index/blob/master/images/TrafficIndex.PNG "Traffic Peformance Score Demo")
 
