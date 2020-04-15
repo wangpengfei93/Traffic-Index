@@ -356,12 +356,12 @@ def IntroduceTrafficIndex():
 				"\n * The TPS of general purpose (GP) and HOV lanes. "
 				"\n * Impact of COVID-19 on urban traffic reflected by the TPS. "
 				"\n * Other traffic performance metrics. " )
-	
 	st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
+	# st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
 	
 
 	#################################################################
-	st.markdown("## Impact of COVID-19 on Traffic Changes")
+	st.markdown("## Traffic Changes in Response to COVID-19")
 	
 	showCOVID19Figure()
 
@@ -374,7 +374,7 @@ def IntroduceTrafficIndex():
 	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
 
 	#################################################################
-	st.markdown("### Segment-based TPS on Map")			
+	st.markdown("### Segment-based TPS on Animated Map")			
 	GenerateGeoAnimation(copy.copy(df_SegTPS))
 
 	#################################################################
