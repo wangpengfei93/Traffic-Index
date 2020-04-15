@@ -42,8 +42,8 @@ def name_map_func(x):
 
 def GetSegmentGeo():
 	# load geo
-	geo = geopandas.read_file('segments.shp')
-	geo_csv = pd.read_csv('SegmentsGeo.csv')
+	geo = geopandas.read_file('geodata/step-2.shp')
+	geo_csv = pd.read_csv('geodata/step-2.csv')
 	geo_csv.drop(['geometry'], axis = 1, inplace = True)
 	geo = pd.concat([geo_csv, geo['geometry']], axis = 1)
 
@@ -66,14 +66,14 @@ def GetSegmentGeo():
 	    seg_key.append(str(segmentIDs['route'][i]) + '_' + segmentIDs['mpdirection'][i].upper() + '_' + str(segmentIDs['milepost_small'][i]) + '_' + str(segmentIDs['milepost_large'][i]))
 	segmentIDs['key'] = seg_key
 	segment = geo.merge(segmentIDs, on = ['key'], how = 'inner')
+	# segment.fillna(0, inplace = True)
     
     # create name
 	segment['route_name'] = segment['route_x'].apply(route_map_func) 
-	segment['direction_name'] = segment['direction'].apply(lambda x: x + 'B')
+	segment['direction_name'] = segment['direction'].apply(lambda x: str(x) + 'B')
 	segment['name'] = segment.apply(name_map_func, axis = 1)
 
 	return segment
-
 
 colormap = branca.colormap.LinearColormap(vmin = 60, 
                                         vmax= 100, 
@@ -170,7 +170,6 @@ def GenerateGeo(TPS):
 	st.markdown(f'<iframe src="/{filename_with_time}" ; style="width:100%; height:400px;"> </iframe>', unsafe_allow_html=True)
 
 
-
 def	GenerateGeoAnimation(TPS):
 	segment = GetSegmentGeo()
 	# merge TPS with segment data
@@ -183,34 +182,6 @@ def	GenerateGeoAnimation(TPS):
 	scaled_data = data
 	scaled_data['TrafficIndex_GP'] = data['TrafficIndex_GP']*100
 	scaled_data['TrafficIndex_HOV'] = data['TrafficIndex_HOV']*100
-
-	tooltip = GeoJsonTooltip(
-		fields=["name", "TrafficIndex_GP", 'time'],
-		aliases=["Road Segment", "Traffic Performance Score", 'Time'],
-		localize=True,
-		sticky=False,
-		labels=True,
-		style="""
-			background-color: #F0EFEF;
-			border: 2px solid black;
-			border-radius: 3px;
-			box-shadow: 3px;
-		"""
-	)
-
-	tooltip_HOV = GeoJsonTooltip(
-		fields=["name", "TrafficIndex_HOV", 'time'],
-		aliases=["Road Segment", "Traffic Performance Score", 'Time'],
-		localize=True,
-		sticky=False,
-		labels=True,
-		style="""
-			background-color: #F0EFEF;
-			border: 2px solid black;
-			border-radius: 3px;
-			box-shadow: 3px;
-		"""
-	)
 
 	temporal_data = segment.merge(TPS, on = ['segmentID'], how = 'left')
 	temporal_data['TrafficIndex_GP'] = temporal_data['TrafficIndex_GP']*100
@@ -225,13 +196,12 @@ def	GenerateGeoAnimation(TPS):
 	    except:
 	        continue
 
-
 	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
 
 	plugins.TimestampedGeoJson({
 	    'type': 'FeatureCollection',
 	    'features': features,
-	}, period='PT1H', add_last_point= False).add_to(m)
+	}, period='PT1H', add_last_point= False, max_speed = 10, min_speed = 0.1, transition_time = 1000, loop_button = True, time_slider_drag_update=True).add_to(m)
 
 	colormap.add_to(m)
 	# full screen plugins
@@ -243,8 +213,6 @@ def	GenerateGeoAnimation(TPS):
 	).add_to(m)
 
 	# folium.LayerControl(collapsed=False).add_to(m)
-
-
 
 	STREAMLIT_STATIC_PATH = os.path.join(os.path.dirname(st.__file__), 'static')
 
