@@ -348,16 +348,17 @@ def IntroduceTrafficIndex():
 	# Content #
 	###########
 	st.markdown("# Traffic Performance Score in the Greater Seattle Area")
-	st.markdown("## Introduction to Traffic Performance Score")
+	# st.markdown("## Introduction to Traffic Performance Score")
 	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
-				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Seattle area. "
+				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Greater Seattle area. "
 				"With this website, you can view "
-				"\n * The TPS with different temporal resolutions, ranging from one minute to one day. "
-				"\n * The TPS of general purpose (GP) and HOV lanes. "
-				"\n * Impact of COVID-19 on urban traffic reflected by the TPS. "
+				"\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
+				"\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
+				"\n * Traffic changes in response to COVID-19 reflected by the TPS. "
 				"\n * Other traffic performance metrics. " )
-	st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
-	# st.markdown( "To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
+	st.markdown("The TPS calculation and the data source are described in the About page. The **TPS** is a value ranges from 0% to 100%. "
+				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is.")
+	st.markdown("To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
 	
 
 	#################################################################
@@ -895,7 +896,7 @@ def showOtherMetrics():
 def showAbout():
 	#################################################################
 	st.markdown("## Traffic Performance Score Calculation")
-	st.markdown("The raw data contains lane-wise **S**peed, **V**olume, and **O**ccupancy information collected by each loop detector. "
+	st.markdown("The raw data contains lane-wise speed, volume, and occupancy information collected by each loop detector. "
 				"Each detector's meta data includes detector category, route, milepost, director, direction, address. "
 				"Based on the consecutive detectors' location information, we separate the freeways into segments, "
 				"each of which only contains one loop detector per lane. We consider a road segment's length is the corresponding detector's covered length. "
@@ -908,8 +909,9 @@ def showAbout():
 				"of each road segment $i$ at time $t$. $L^i$ is the length of $i$-th detector's covered road segment."
 				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
 				"The unit of covered distance is mile.")
-	st.markdown("In this way, the **TPS** is a value ranges from 0 to 1.0 ($TPS \in [0,1.0]$). "
-				"The closer to one the **TPS** is, the better the overall network-wide traffic condition is. ")
+	st.markdown("In this way, the **TPS** is a value ranges from 0% to 100%. "
+			#	"($TPS \in [0, 100]$). "
+				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. ")
 
 	#################################################################
 	st.markdown("## Data Source")
