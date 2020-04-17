@@ -11,7 +11,7 @@ pip install streamlit
 ```
 * run script
 ```python
-streamlit run TrafficIndex.py
+streamlit run TrafficPerformanceScore.py
 ```
 ## Demo
 http://starlab-tps.com
