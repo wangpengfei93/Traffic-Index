@@ -351,20 +351,22 @@ def IntroduceTrafficIndex():
 	# st.markdown("## Introduction to Traffic Performance Score")
 	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
 				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Greater Seattle area. "
-				"With this website, you can view "
-				"\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
-				"\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
-				"\n * Traffic changes in response to COVID-19 reflected by the TPS. "
-				"\n * Other traffic performance metrics. " )
-	st.markdown("The TPS calculation and the data source are described in the About page. The **TPS** is a value ranges from 0% to 100%. "
-				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is.")
+				# "With this website, you can view "
+				# "\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
+				# "\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
+				# "\n * Traffic changes in response to COVID-19 reflected by the TPS. "
+				# "\n * Other traffic performance metrics. " 
+				)
+	st.markdown("The **TPS** is a value ranges from 0% to 100%. "
+				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. "
+				"The TPS calculation and the data source are described in the *About* page. ")
 	st.markdown("To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
 	
 
 	#################################################################
-	st.markdown("## Traffic Changes in Response to COVID-19")
+	# st.markdown("## Traffic Changes in Response to COVID-19")
 	
-	showCOVID19Figure()
+	# showCOVID19Figure()
 
 	#################################################################
 	st.markdown("## Segment-based Traffic Performance Score")
@@ -856,7 +858,7 @@ def showOtherMetrics():
 	# main content
 	########################
 	st.markdown("# Other Traffic Performance Metrics")
-	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=60)))
 	edate = st.date_input('Select an end date', value = datetime.datetime.now().date())
 	st.write('From ',sdate, ' to ',edate)
 	if rushHourVolume:
@@ -895,6 +897,14 @@ def showOtherMetrics():
 
 def showAbout():
 	#################################################################
+	st.markdown("# Traffic Performance Score")
+	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
+				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Greater Seattle area. "
+				"With this website, you can view "
+				"\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
+				"\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
+				"\n * Traffic changes in response to COVID-19 reflected by the TPS. "
+				"\n * Other traffic performance metrics. " )
 	st.markdown("## Traffic Performance Score Calculation")
 	st.markdown("The raw data contains lane-wise speed, volume, and occupancy information collected by each loop detector. "
 				"Each detector's meta data includes detector category, route, milepost, director, direction, address. "
@@ -974,7 +984,7 @@ def main():
 	# st.title("Traffic Performance Score in Seattle Area")
 
 	st.sidebar.title("Traffic Performance Score")
-	app_mode = st.sidebar.radio("Navitation",
+	app_mode = st.sidebar.radio("Navigation",
 	        ["Home", "Network-based TPS", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics", "About"])
 	# st.sidebar.markdown("[![this is an image link](./images/STARLab.png)](https://streamlit.io)")
 	if  app_mode == "Home":
