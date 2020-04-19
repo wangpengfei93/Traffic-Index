@@ -20,7 +20,8 @@ import copy
 from sys import platform 
 if platform == "linux" or platform == "linux2":
     # linux
-	SQL_DRIVER = 'SQL Server'
+	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
+	
 elif platform == "darwin":
     # OS X
 	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
