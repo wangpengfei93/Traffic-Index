@@ -618,7 +618,7 @@ def update_and_get_covid19_info(url):
             df_web = pd.DataFrame({'date': date_list, 'confirmed case': cases_list, 'death case': death_list})
             # calculate new case based on confirmed case
             df_web['new case'] = df_web['confirmed case'] - df_web['confirmed case'].shift(1)
-            df_web.loc[0, 'new case'] = 0
+            df_web.drop(df_web.index[0], inplace=True)
             df_web['date'] = df_web['date'].astype('datetime64[ns]')
             
             # merge df_web and df_csv
