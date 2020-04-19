@@ -858,7 +858,15 @@ def showOtherMetrics():
 	# main content
 	########################
 	st.markdown("# Other Traffic Performance Metrics")
-	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=60)))
+
+	st.markdown('This page mainly shows the variation of traffic volume on rush hours for both GP and HOV lanes. '
+				'The precise volume of a certain lane on a certain date can be viewed on the figure dynamically. '
+				'By default, we show the variation during a month. Just customize the rush hours and lanes you need. '
+				'We also provide tablular data if you would like to check more details. '
+				'The tablular data can be downloaded at the bottom of this page. ')
+	st.markdown("Tips: Morning rush hours: 6:00AM-9:00AM; Evening rush hours: 3:00PM-6:00PM")
+
+	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 	edate = st.date_input('Select an end date', value = datetime.datetime.now().date())
 	st.write('From ',sdate, ' to ',edate)
 	if rushHourVolume:
@@ -882,16 +890,27 @@ def showOtherMetrics():
 		# Create traces
 		fig = go.Figure()
 		for item in dataFields:
-			fig.add_trace(go.Scatter(x=data['date'], y=data[item],
-								 mode='lines', line=dict(dash='solid', width=lw),
-								 name=item))
+			fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
 
 		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Volume per Lane',
 						  legend=dict(x=.01, y=0.05),
 						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
 
 		st.plotly_chart(fig)
-		st.markdown("Morning rush hours: 6:00AM-9:00AM; Evening rush hours: 3:00PM-6:00PM")
+
+		st.markdown("## Rush Hour Traffic Volume Tablular Data")
+
+		# rename column headers
+		df_pv.columns = ['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV']
+
+		dataFields = st.multiselect('Show Data Type', list(df_pv.columns.values),
+				default=['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'])
+
+
+		st.write(df_pv[dataFields])
+		st.markdown("Download the tabular data as a CSV file:")
+		st.markdown(get_table_download_link(df_pv[dataFields]), unsafe_allow_html=True)
+
 	#st.line_chart(df_pv[dataFields], use_container_width=True)
 
 

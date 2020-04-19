@@ -11,7 +11,7 @@ pip install streamlit
 ```
 * run script
 ```python
-streamlit run TrafficIndex.py
+streamlit run TrafficPerformanceScore.py
 ```
 ## Demo
-http://128.95.204.64:8501/
+http://starlab-tps.com

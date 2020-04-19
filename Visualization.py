@@ -163,7 +163,7 @@ def GenerateGeo(TPS):
 
 	# st.write(os.path.dirname(st.__file__) + '\\static')
 
-	for filename in glob.glob(STREAMLIT_STATIC_PATH + 'map*'):
+	for filename in glob.glob(os.path.join(STREAMLIT_STATIC_PATH, 'map*')):
 		os.remove(filename)
 
 	filename_with_time = f'map_{time.time()}.html'
@@ -225,10 +225,10 @@ def	GenerateGeoAnimation(TPS):
 
 	# st.write(os.path.dirname(st.__file__) + '\\static')
 
-	for filename in glob.glob(STREAMLIT_STATIC_PATH + 'map*'):
+	for filename in glob.glob(os.path.join(STREAMLIT_STATIC_PATH, 'ani*')):
 		os.remove(filename)
 
-	filename_with_time = f'map_{time.time()}.html'
+	filename_with_time = f'ani_{time.time()}.html'
 	map_path = os.path.join(STREAMLIT_STATIC_PATH, filename_with_time)
 	open(map_path, 'w').write(m._repr_html_())
 
