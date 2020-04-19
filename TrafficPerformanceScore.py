@@ -349,8 +349,9 @@ def IntroduceTrafficIndex():
 	###########
 	st.markdown("# Traffic Performance Score in the Greater Seattle Area")
 	# st.markdown("## Introduction to Traffic Performance Score")
-	st.markdown("Traffic Performance Score (TPS) can intuitively indicate the overall performance of urban traffic networks. "
-				"In this website, the TPS is calculated and visualized to quantify the overall traffic condition in the Greater Seattle area. "
+	st.markdown("In this website, Traffic Performance Score (TPS) indicating the overall performance "
+				"of the freeway networks in the Greater Seattle area is calculated and visualized. "
+				
 				# "With this website, you can view "
 				# "\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
 				# "\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
@@ -359,8 +360,8 @@ def IntroduceTrafficIndex():
 				)
 	st.markdown("The **TPS** is a value ranges from 0% to 100%. "
 				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. "
-				"The TPS calculation and the data source are described in the *About* page. ")
-	st.markdown("To view more information, please select on the left navigation panel. Enjoy! :sunglasses:")
+				"The TPS calculation and the data source are described in the ***About*** page. ")
+	st.markdown("To view more information, please select on the left ***navigation*** panel. Enjoy! :sunglasses:")
 	
 
 	#################################################################
@@ -447,9 +448,11 @@ def showTrafficIndex():
 	########################
 	# main content
 	########################
-	st.markdown("# Traffic Performance Score")
-	st.markdown("In this section, the TPS is provided based on selected start and end dates. ")
-		# "You can check or uncheck the checkbox in the left panel to adjuect the displayed information.")
+	st.markdown("# Network-based TPS")
+	st.markdown("* In this section, the network-wide TPS in the Greater Seattle area is provided based on the selected start and end dates. "
+				"\n * TPS in both one day and 5-minute intervals is visualized. "
+				"\n * Downloadable TPS tabular data in 5-minute intervals is also provided at the bottom of the page.")
+	# "You can check or uncheck the checkbox in the left panel to adjuect the displayed information.")
 	# sdate = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 	# edate = st.date_input('Pick an end date', value = datetime.datetime.now().date())
 	# st.write('From ',sdate, ' to ', edate,':')
@@ -514,6 +517,9 @@ def showTrafficIndex():
 
 		sampling_interval = 1
 		data = df_TI_range.loc[::sampling_interval, ['time', 'trafficindex_gp', 'trafficindex_hov']]
+
+		# st.write(df_TI_range['time'].dtypes)
+
 		lw = 1  # line width
 		# Create traces
 		fig = go.Figure()
@@ -623,8 +629,10 @@ def update_and_get_covid19_info(url):
 
 
 def showSgementTPS():
-	st.markdown("# Segment-based Traffic Preformance Score")
+	st.markdown("# Segment-based TPS")
 
+	st.markdown("* In this section, TPS of freeway segments is provided and visualzied on an interactive map. "
+				"\n * Segment-based TPS is also visualized separately at the bottom of the page.")
 	date = st.date_input('Pick an end date', value = datetime.datetime.now().date())
 	
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
@@ -688,6 +696,8 @@ def showSgementTPS():
 	df_SegTPS_Day['trafficindex_gp'] = df_SegTPS_Day['trafficindex_gp'] * 100
 	# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
 	df_SegTPS_Day['trafficindex_hov'] = df_SegTPS_Day['trafficindex_hov'] * 100
+	df_SegTPS_Day['time'] = pd.to_datetime(df_SegTPS_Day['time'])
+
 	lw = 1  # line width
 	fig = go.Figure()
 	fig.add_trace(go.Scatter(x=df_SegTPS_Day['time'], y=df_SegTPS_Day['trafficindex_gp'],
@@ -705,7 +715,8 @@ def showSgementTPS():
 
 def showCOVID19():
 
-	st.markdown("# Impact of COVID-19 on Urban Traffic")
+	# st.markdown("# Impact of COVID-19 on Traffic Changes")
+	st.markdown("# How Does COVID-19 Affects TPS")
 	st.markdown("## COVID-19 in Washington State")
 	st.markdown("Since the early March 2020, the coronavirus outbreak has taken hold in the United States. "
 				"Besides affecting public health, COVID-19 also has greatly impacted the whole transportation network, "
@@ -767,7 +778,10 @@ def showCOVID19():
 	data = pd.merge(df_DailyIndex, df_COVID19, on='date', how='left')
 
 	# st.write(data['confirmed case'].max())
-	confirmed_case_axis_max = data['confirmed case'].max() + 500
+	confirmed_case_axis_max = pd.to_numeric(data['confirmed case']).max() + 2000
+
+	# st.write(confirmed_case_axis_max)
+
 	lw = 2  # line width
 
 	# Create figure with secondary y-axis
@@ -860,10 +874,9 @@ def showOtherMetrics():
 	st.markdown("# Other Traffic Performance Metrics")
 
 	st.markdown('This page mainly shows the variation of traffic volume on rush hours for both GP and HOV lanes. '
-				'The precise volume of a certain lane on a certain date can be viewed on the figure dynamically. '
-				'By default, we show the variation during a month. Just customize the rush hours and lanes you need. '
-				'We also provide tablular data if you would like to check more details. '
-				'The tablular data can be downloaded at the bottom of this page. ')
+				'Please customize the rush hours and lanes as you need. '
+				'Downloadable tablular data is shown at the bottom of this page '
+				)
 	st.markdown("Tips: Morning rush hours: 6:00AM-9:00AM; Evening rush hours: 3:00PM-6:00PM")
 
 	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
@@ -898,7 +911,7 @@ def showOtherMetrics():
 
 		st.plotly_chart(fig)
 
-		st.markdown("## Rush Hour Traffic Volume Tablular Data")
+		st.markdown("### Rush Hour Traffic Volume Tablular Data")
 
 		# rename column headers
 		df_pv.columns = ['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV']
@@ -934,7 +947,7 @@ def showAbout():
 	st.latex(r'''
 		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n V_t^i * Q_t^i * L^i }{ \displaystyle\sum_{i=1}^n 65 * Q_t^i * L^i } * 100\%
 		''')
-	st.markdown("where $V_t^i$ and $Q_t^i$, and $D^i$ represent the *speed* and *volume* "
+	st.markdown("where $V_t^i$ and $Q_t^i$ represent the *speed* and *volume* "
 				"of each road segment $i$ at time $t$. $L^i$ is the length of $i$-th detector's covered road segment."
 				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
 				"The unit of covered distance is mile.")

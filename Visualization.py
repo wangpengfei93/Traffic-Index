@@ -76,9 +76,9 @@ def GetSegmentGeo():
 
 	return segment
 
-colormap = branca.colormap.LinearColormap(vmin = 60, 
+colormap = branca.colormap.LinearColormap(vmin = 50, 
                                         vmax= 100, 
-                                        colors=['red','orange','yellow','lightgreen','green'],
+                                        colors=['darkred', 'red','orange','yellow','lightgreen','green'],
                                        caption="Traffic Performance Score")
 
 def style_func(feature):
