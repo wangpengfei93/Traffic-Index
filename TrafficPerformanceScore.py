@@ -21,7 +21,7 @@ from sys import platform
 if platform == "linux" or platform == "linux2":
     # linux
 	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
-	
+
 elif platform == "darwin":
     # OS X
 	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
@@ -373,7 +373,7 @@ def IntroduceTrafficIndex():
 	#################################################################
 	st.markdown("## Segment-based Traffic Performance Score")
 
-	date = st.date_input('Select a date', value = datetime.datetime.now().date())
+	date = st.date_input('Select a date:', value = datetime.datetime.now().date())
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
 	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
 	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
@@ -466,8 +466,8 @@ def showTrafficIndex():
 	if daily_Index:
 		st.markdown("## Daily Traffic Performance Score")
 
-		sdate_DI = st.date_input('Select a start date for Daily Traffic Performance Score', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
-		edate_DI = st.date_input('Select an end date for Daily Traffic Performance Score' , value = datetime.datetime.now().date())
+		sdate_DI = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
+		edate_DI = st.date_input('Select an end date:' , value = datetime.datetime.now().date())
 		st.write('From ',sdate_DI, ' to ', edate_DI,':')
 
 		df_DailyIndex = getDailyIndex(sdate_DI, edate_DI)
@@ -558,7 +558,9 @@ def showTrafficIndex():
 		# rename column headers
 		df_TI_range.columns = ['Time', 'AVG_Spd_GP', 'AVG_Vol_GP', 'TPS_GP', 'AVG_Spd_HOV', 'AVG_Vol_HOV', 'TPS_HOV']
 	
-		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values), default = ['Time', 'TPS_GP', 'TPS_HOV'] )
+		dataFields = st.multiselect('Show Data Type',  list(df_TI_range.columns.values)
+						, default = ['Time', 'AVG_Spd_GP', 'AVG_Vol_GP', 'TPS_GP', 'AVG_Spd_HOV', 'AVG_Vol_HOV', 'TPS_HOV']
+		 )
 		st.write(df_TI_range[dataFields])
 
 		st.markdown("Download the tabular data as a CSV file:")
@@ -622,7 +624,7 @@ def update_and_get_covid19_info(url):
             # merge df_web and df_csv
             df_csv['date'] = df_csv['date'].astype('datetime64[ns]')
             df_new = df_csv.append(df_web, ignore_index=True)
-            df_new = df_new.drop_duplicates(subset=['date'], keep='first')
+            df_new = df_new.drop_duplicates(subset=['date'], keep='last')
             df_new.to_csv("Washington_COVID_Cases.csv", mode='w', header=True, index=False)
 
     finally:
@@ -632,9 +634,9 @@ def update_and_get_covid19_info(url):
 def showSgementTPS():
 	st.markdown("# Segment-based TPS")
 
-	st.markdown("* In this section, TPS of freeway segments is provided and visualzied on an interactive map. "
+	st.markdown("* In this section, TPS of freeway segments is provided and visualized on an interactive map. "
 				"\n * Segment-based TPS is also visualized separately at the bottom of the page.")
-	date = st.date_input('Pick an end date', value = datetime.datetime.now().date())
+	date = st.date_input('Select a date:', value = datetime.datetime.now().date())
 	
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
 	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
@@ -663,7 +665,7 @@ def showSgementTPS():
 	# if annimation == 'Dynamic Map':
 	# GenerateGeoAnimation(df_SegTPS)
 	# else:
-	dt = st.selectbox('Select a time', df_SegTPS['time'].astype(str).unique().tolist())
+	dt = st.selectbox('Select a time:', df_SegTPS['time'].astype(str).unique().tolist())
 	TPS = df_SegTPS[df_SegTPS['time'] == dt]
 	GenerateGeo(TPS)
 
@@ -675,8 +677,8 @@ def showSgementTPS():
 	#####
 	st.markdown("# Route-based Traffic Preformance Score")
 
-	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
-	edate = st.date_input('Select an end date' , value = datetime.datetime.now().date())
+	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	edate = st.date_input('Select an end date:' , value = datetime.datetime.now().date())
 
 	st.write('From ',sdate, ' to ', edate)
 
@@ -880,8 +882,8 @@ def showOtherMetrics():
 				)
 	st.markdown("Tips: Morning rush hours: 6:00AM-9:00AM; Evening rush hours: 3:00PM-6:00PM")
 
-	sdate = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
-	edate = st.date_input('Select an end date', value = datetime.datetime.now().date())
+	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	edate = st.date_input('Select an end date:', value = datetime.datetime.now().date())
 	st.write('From ',sdate, ' to ',edate)
 	if rushHourVolume:
 		st.markdown("### Volume per Lane at Rush Hour")
@@ -946,7 +948,7 @@ def showAbout():
 				"The time interval of the data is one-minute. ")
 	st.markdown("The **Traffic Performance Score** (**TPS**) at time $t$ is calculated using the following equation:")
 	st.latex(r'''
-		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n V_t^i * Q_t^i * L^i }{ \displaystyle\sum_{i=1}^n 65 * Q_t^i * L^i } * 100\%
+		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n V_t^i \cdot Q_t^i \cdot L^i }{ 65 \cdot \displaystyle \sum_{i=1}^n Q_t^i \cdot L^i } * 100\%
 		''')
 	st.markdown("where $V_t^i$ and $Q_t^i$ represent the *speed* and *volume* "
 				"of each road segment $i$ at time $t$. $L^i$ is the length of $i$-th detector's covered road segment."
