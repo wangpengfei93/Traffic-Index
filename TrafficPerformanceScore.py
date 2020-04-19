@@ -431,7 +431,8 @@ def IntroduceTrafficIndex():
 
 	# dataFields = st.multiselect('Show Data',  list(df_TI.columns.values), default = ['time', 'trafficindex_gp', 'trafficindex_hov'] )
 	# st.write(df_TI[dataFields])
-
+	st.write("Main lane: general purpose (GP) lane. ")
+	st.write("HOV lane: high-occupancy vehicle lane, also known as carpool lane. ")
 
 
 	
