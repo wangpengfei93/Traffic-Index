@@ -152,13 +152,13 @@ def GenerateGeo(TPS):
 
 	colormap.add_to(m)
 	# full screen plugins
-	# plugins.Fullscreen(
-	# 	position='topright',
-	# 	title='Expand me',
-	# 	title_cancel='Exit me',
-	# 	force_separate_button=True
-	# ).add_to(m)
-	# folium.LayerControl(collapsed=False).add_to(m)
+	plugins.Fullscreen(
+		position='topright',
+		title='Expand me',
+		title_cancel='Exit me',
+		force_separate_button=True
+	).add_to(m)
+	folium.LayerControl(collapsed=False).add_to(m)
 
 	STREAMLIT_STATIC_PATH = os.path.join(os.path.dirname(st.__file__), 'static')
 
@@ -212,13 +212,13 @@ def	GenerateGeoAnimation(TPS):
 	}, period='PT1H', add_last_point= False, max_speed = 10, min_speed = 0.1, transition_time = 1000, loop_button = True, time_slider_drag_update=True).add_to(m)
 
 	colormap.add_to(m)
-	# # full screen plugins
-	# plugins.Fullscreen(
-	# 	position='topright',
-	# 	title='Expand me',
-	# 	title_cancel='Exit me',
-	# 	force_separate_button=True
-	# ).add_to(m)
+	# full screen plugins
+	plugins.Fullscreen(
+		position='topright',
+		title='Expand me',
+		title_cancel='Exit me',
+		force_separate_button=True
+	).add_to(m)
 
 	# folium.LayerControl(collapsed=False).add_to(m)
 
