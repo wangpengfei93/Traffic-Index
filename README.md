@@ -14,4 +14,4 @@ pip install streamlit
 streamlit run TrafficPerformanceScore.py
 ```
 ## Demo
-http://starlab-tps.com
+http://tps.uwstarlab.org/

@@ -408,6 +408,8 @@ def IntroduceTrafficIndex():
 
 	sampling_interval = 1
 	data = df_TI.loc[::sampling_interval, ['time', 'trafficindex_gp', 'trafficindex_hov']]
+	minimum_score = min(data['trafficindex_gp'].min(), data['trafficindex_hov'].min())
+	minimum_score = round(minimum_score//5 *5)
 	lw = 1  # line width
 	# Create traces
 	fig = go.Figure()
@@ -419,9 +421,10 @@ def IntroduceTrafficIndex():
 							 mode='lines', line=dict(dash='solid', width=lw),
 							 name='HOV lane'))
 
-	fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Performance Score (%)',
-					  legend = dict(x=.01, y=0.05),
-					  margin = go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
+	fig.update_layout(xaxis=dict(title_text='Time', showticklabels=True),
+					  yaxis=dict(title_text='Traffic Performance Score (%)', range = [minimum_score, 100], showticklabels=True),
+					  legend = dict(x=.01, y=0),
+					  margin = go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width = 700, height = 450)
 
 	#fig.update_yaxes(range=[0, 1.1])
 
@@ -482,6 +485,8 @@ def showTrafficIndex():
 		# df_DailyIndex['daily_index_hov'] = df_DailyIndex['daily_index_hov'].astype('int64')
 
 		data = df_DailyIndex[['date', 'daily_index_gp', 'daily_index_hov']]
+		minimum_score = min(data['daily_index_gp'].min(), data['daily_index_hov'].min())
+		minimum_score = round(minimum_score // 5 * 5)
 		lw = 1  # line width
 		# Create traces
 		fig = go.Figure()
@@ -491,9 +496,11 @@ def showTrafficIndex():
 		fig.add_trace(go.Scatter(x=data['date'], y=data['daily_index_hov'],
 								 mode='lines', line=dict(dash='solid', width=lw),
 								 name='HOV lane'))
-		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Performance Score (%)',
-						  legend=dict(x=.01, y=0.05),
-						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
+		fig.update_layout(xaxis_title='Date',
+						  yaxis=dict(title_text='Traffic Performance Score (%)', range=[minimum_score, 100],
+									 showticklabels=True),
+						  legend=dict(x=.01, y=0),
+						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
 		st.plotly_chart(fig)
 
 	########################
@@ -523,6 +530,8 @@ def showTrafficIndex():
 		# st.write(df_TI_range['time'].dtypes)
 
 		lw = 1  # line width
+		minimum_score = min(data['trafficindex_gp'].min(), data['trafficindex_hov'].min())
+		minimum_score = round(minimum_score // 5 * 5)
 		# Create traces
 		fig = go.Figure()
 		fig.add_trace(go.Scatter(x=data['time'], y=data['trafficindex_gp'],
@@ -531,10 +540,11 @@ def showTrafficIndex():
 		fig.add_trace(go.Scatter(x=data['time'], y=data['trafficindex_hov'],
 								 mode='lines', line=dict(dash='solid', width=lw),
 								 name='HOV lane'))
-		fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Performance Score (%)',
-						  legend=dict(x=.01, y=0.05),
-						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
-		#fig.update_yaxes(range=[0, 1.1])
+		fig.update_layout(xaxis_title='Time',
+						  yaxis=dict(title_text='Traffic Performance Score (%)', range=[minimum_score, 100],
+									 showticklabels=True),
+						  legend=dict(x=.01, y=0),
+						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
 		st.plotly_chart(fig)
 
 		
@@ -703,6 +713,8 @@ def showSgementTPS():
 	df_SegTPS_Day['time'] = pd.to_datetime(df_SegTPS_Day['time'])
 
 	lw = 1  # line width
+	minimum_score = min(df_SegTPS_Day['trafficindex_gp'].min(), df_SegTPS_Day['trafficindex_hov'].min())
+	minimum_score = round(minimum_score // 5 * 5)
 	fig = go.Figure()
 	fig.add_trace(go.Scatter(x=df_SegTPS_Day['time'], y=df_SegTPS_Day['trafficindex_gp'],
 							 mode='lines', line=dict(dash='solid', width=lw),
@@ -710,9 +722,12 @@ def showSgementTPS():
 	fig.add_trace(go.Scatter(x=df_SegTPS_Day['time'], y=df_SegTPS_Day['trafficindex_hov'],
 							 mode='lines', line=dict(dash='solid', width=lw),
 							 name='HOV lane'))
-	fig.update_layout(xaxis_title='Time', yaxis_title='Traffic Performance Score (%)',
-					  legend=dict(x=.01, y=0.05),
-					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
+
+	fig.update_layout(xaxis_title='Time',
+					  yaxis=dict(title_text='Traffic Performance Score (%)', range=[minimum_score, 100],
+								 showticklabels=True),
+					  legend=dict(x=.01, y=0),
+					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
 	#fig.update_yaxes(range=[0, 1.1])
 	st.plotly_chart(fig)
 
@@ -904,15 +919,19 @@ def showOtherMetrics():
 
 		data = df_pv[['date'] + dataFields]
 		lw = 1  # line width
+		maximun_vol = 0
+
 		# Create traces
 		fig = go.Figure()
 		for item in dataFields:
+			maximun_vol = max(data[item].max(), maximun_vol)
 			fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
-
-		fig.update_layout(xaxis_title='Date', yaxis_title='Traffic Volume per Lane',
-						  legend=dict(x=.01, y=0.05),
-						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), width = 700, height = 450)
-
+		maximun_vol = round(maximun_vol // 5 * 5)+5
+		fig.update_layout(xaxis_title='Date',
+						  yaxis=dict(title_text='Traffic Volume per Lane', range=[0, maximun_vol],
+									 showticklabels=True),
+						  legend=dict(x=.01, y=0),
+						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
 		st.plotly_chart(fig)
 
 		st.markdown("### Rush Hour Traffic Volume Tablular Data")
