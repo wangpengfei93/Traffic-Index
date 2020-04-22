@@ -1026,7 +1026,7 @@ def showVMT():
 		fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
 	maximun_vol = round(maximun_vol // 5 * 5)+5
 	fig.update_layout(xaxis_title='Date',
-					  yaxis=dict(title_text='Vehicle * Mile', range=[0, maximun_vol],
+					  yaxis=dict(title_text='VMT', range=[0, maximun_vol],
 								 showticklabels=True),
 					  legend=dict(x=.01, y=0),
 					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
