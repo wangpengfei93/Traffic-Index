@@ -13,7 +13,8 @@ from folium.features import GeoJson, GeoJsonTooltip
 from folium import plugins
 import fiona
 import fiona.crs
-# import pdb
+#import pdb
+from datetime import datetime
 
 from sys import platform 
 if platform == "linux" or platform == "linux2":
@@ -144,9 +145,7 @@ def GenerateGeo(TPS):
 
 	data_gdf = geopandas.GeoDataFrame(scaled_data, crs=fiona.crs.from_epsg(4326))
 
-	# st.write(data_gdf['time'])
-
-	data_gdf['time'] = data_gdf['time'].apply(lambda x: x.isoformat())
+	data_gdf['time'] = data_gdf['time'].apply(lambda x: datetime.fromtimestamp(datetime.timestamp(x)).astimezone().isoformat()) 
 
 
 	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
@@ -182,6 +181,7 @@ def GenerateGeo(TPS):
 
 def	GenerateGeoAnimation(TPS):
 	TPS.columns = ['time', 'segmentID', 'AVG_Spd_GP', 'AVG_Spd_HOV', 'AVG_Vol_GP', 'AVG_Vol_HOV', 'TrafficIndex_GP', 'TrafficIndex_HOV']
+	TPS['time'] = TPS['time'].apply(lambda x: datetime.fromtimestamp(datetime.timestamp(x)).astimezone().isoformat())
 	
 	segment = GetSegmentGeo()
 	# merge TPS with segment data
@@ -204,9 +204,10 @@ def	GenerateGeoAnimation(TPS):
 	    route = line['geometry']
 	    try:
 	        features.append(Feature(geometry = route, properties={"TrafficIndex_GP":float(line['TrafficIndex_GP']), "name": line["name"], 
-	                                                          "times":[line["time"].isoformat()]*len(line['geometry'].coords), "style":{"color": colormap(line['TrafficIndex_GP'])}}))
+	                                                          "times":[line['time']]*len(line['geometry'].coords), "style":{"color": colormap(line['TrafficIndex_GP'])}}))
 	    except:
 	        continue
+
 
 	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
 
@@ -216,13 +217,6 @@ def	GenerateGeoAnimation(TPS):
 	}, period='PT1H', add_last_point= False, max_speed = 10, min_speed = 0.1, transition_time = 1000, loop_button = True, time_slider_drag_update=True).add_to(m)
 
 	colormap.add_to(m)
-	# # full screen plugins
-	# plugins.Fullscreen(
-	# 	position='topright',
-	# 	title='Expand me',
-	# 	title_cancel='Exit me',
-	# 	force_separate_button=True
-	# ).add_to(m)
 
 	# folium.LayerControl(collapsed=False).add_to(m)
 
