@@ -31,6 +31,9 @@ elif platform == "win32":
     # Windows...
 	SQL_DRIVER = 'ODBC Driver 17 for SQL Server'
 	SQL_DRIVER = 'SQL Server'
+	
+import warnings
+warnings.filterwarnings("ignore")
 
 
 from Visualization import GenerateGeo, GenerateGeoAnimation
