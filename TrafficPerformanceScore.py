@@ -1038,12 +1038,12 @@ def showAbout():
 				"The time interval of the data is one-minute. ")
 	st.markdown("The **Traffic Performance Score** (**TPS**) at time $t$ is calculated using the following equation:")
 	st.latex(r'''
-		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n V_t^i \cdot Q_t^i \cdot L^i }{ 65 \cdot \displaystyle \sum_{i=1}^n Q_t^i \cdot L^i } * 100\%
+		\text{TPS}_t = \frac{\displaystyle\sum_{i=1}^n V_t^i \cdot Q_t^i \cdot L^i }{ V_f \cdot \displaystyle \sum_{i=1}^n Q_t^i \cdot L^i } * 100\%
 		''')
 	st.markdown("where $V_t^i$ and $Q_t^i$ represent the *speed* and *volume* "
 				"of each road segment $i$ at time $t$. $L^i$ is the length of $i$-th detector's covered road segment."
-				"The unit of speed is mile per hour (mph), and we set 65 as the upper limit of the speed. "
-				"The unit of covered distance is mile.")
+				"$V_f$ is the free flow speed. "
+				"The unit of speed is mile per hour (mph), and the unit of covered distance is mile.")
 	st.markdown("In this way, the **TPS** is a value ranges from 0% to 100%. "
 			#	"($TPS \in [0, 100]$). "
 				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. ")
