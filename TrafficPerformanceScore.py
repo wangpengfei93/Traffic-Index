@@ -1026,7 +1026,7 @@ def showVMT():
 		fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
 	maximun_vol = round(maximun_vol // 5 * 5)+5
 	fig.update_layout(xaxis_title='Date',
-					  yaxis=dict(title_text='Traffic Volume per Lane', range=[0, maximun_vol],
+					  yaxis=dict(title_text='Vehicle * Mile', range=[0, maximun_vol],
 								 showticklabels=True),
 					  legend=dict(x=.01, y=0),
 					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
@@ -1226,6 +1226,11 @@ def showAbout():
 				"Freeways include: I-5, I-90, I-99, I-167, I-405, and SR-520. The raw data comes from Washington State Department of Transportation (WSDOT). "
 				"Representative detectors are shown in the following map. ")
 	showLoopDetectorMap()
+
+	#################################################################
+	st.markdown("## Development Credit")
+	st.markdown("This website is developed by the Artificial Intelligence group in the Smart Transportation Application and Research Lab ([STAR Lab](http://www.uwstarlab.org/)). ")
+	st.markdown("Group member: Zhiyong Cui, Meixin Zhu, Pengfei Wang, Yang Zhou, Qianxia Cao, and Shuo Wang")
 
 
 def showLoopDetectorMap():	
