@@ -16,6 +16,7 @@ import locale
 import folium
 import base64
 import copy
+import math
 
 from sys import platform 
 if platform == "linux" or platform == "linux2":
@@ -219,6 +220,20 @@ def getEveningPeakVolume(sdate, edate):
 
     return pd.DataFrame(SQL_Query)
 
+
+def getVMT(sdate, edate):
+    conn = getDatabaseConnection()
+
+    SQL_Query = pd.read_sql_query(
+    '''	SELECT convert(varchar, CAST([time] AS DATE), 107) as Date, SUM(VMT_GP) as VMT_GP, SUM(VMT_HOV) as VMT_HOV
+		FROM [RealTimeLoopData].[dbo].[TrafficIndex]
+		WHERE CAST([time] AS DATE) between ? and ?
+		GROUP BY CAST([time] AS DATE)
+		ORDER BY CAST([time] AS DATE)
+      	''', conn, params = [sdate,edate])
+
+    return pd.DataFrame(SQL_Query)
+
 def getCOVID19Info():
 	return pd.read_csv('Washington_COVID_Cases.csv') 
 
@@ -408,8 +423,13 @@ def IntroduceTrafficIndex():
 
 	sampling_interval = 1
 	data = df_TI.loc[::sampling_interval, ['time', 'trafficindex_gp', 'trafficindex_hov']]
+	# minimum_score = 0
 	minimum_score = min(data['trafficindex_gp'].min(), data['trafficindex_hov'].min())
-	minimum_score = round(minimum_score//5 *5)
+	# st.write(minimum_score)
+	if not math.isnan(minimum_score):
+		minimum_score = round(minimum_score//5 *5)
+	else:
+		minimum_score = 0
 	lw = 1  # line width
 	# Create traces
 	fig = go.Figure()
@@ -577,14 +597,14 @@ def showTrafficIndex():
 		st.markdown("Download the tabular data as a CSV file:")
 		st.markdown(get_table_download_link(df_TI_range[dataFields]), unsafe_allow_html=True)
 
-def get_table_download_link(df):
+def get_table_download_link(df, filename = 'data'):
     """Generates a link allowing the data in a given panda dataframe to be downloaded
     in:  dataframe
     out: href string
     """
     csv = df.to_csv(index=False)
     b64 = base64.b64encode(csv.encode()).decode()  # some strings <-> bytes conversions necessary here
-    href = f'<a href="data:file/csv;base64,{b64}" download="data.csv">Download csv file</a>'
+    href = f'<a href="data:file/csv;base64,{b64}" download="{filename}.csv">Download csv file</a>'
     return href
 
 def get_data_from_sel(url, sel):
@@ -885,7 +905,7 @@ def showOtherMetrics():
 	###########
 	# st.sidebar.markdown("## Components")
 	# rushHourVolume = st.sidebar.checkbox("Volume at Rush Hours", value = True)
-	rushHourVolume = True
+	# rushHourVolume = True
 	
 	########################
 	# main content
@@ -898,56 +918,103 @@ def showOtherMetrics():
 				)
 	st.markdown("Tips: Morning rush hours: 6:00AM-9:00AM; Evening rush hours: 3:00PM-6:00PM")
 
-	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
 	edate = st.date_input('Select an end date:', value = datetime.datetime.now().date())
 	st.write('From ',sdate, ' to ',edate)
-	if rushHourVolume:
-		st.markdown("### Volume per Lane at Rush Hour")
-		
-		df_mpv = getMorningPeakVolume(sdate, edate)
-		df_mpv['date'] = df_mpv['date'].astype('datetime64[ns]')
-		df_mpv.rename(columns = {'avg_vol_gp':'Morning_GP', 'avg_vol_hov':'Morning_HOV'}, inplace = True) 
-
-		df_epv = getEveningPeakVolume(sdate, edate)
-		df_epv['date'] = df_epv['date'].astype('datetime64[ns]')
-		df_epv.rename(columns = {'avg_vol_gp':'Evening_GP', 'avg_vol_hov':'Evening_HOV'}, inplace = True) 
-
-		df_pv = pd.merge(df_mpv, df_epv, on='date')
-		df_pv.set_index('date')
-		#print(list(df_pv.columns.values))
-		dataFields = st.multiselect('Data fields', ['Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'] , default = ['Morning_GP', 'Evening_GP'] )
-
-		data = df_pv[['date'] + dataFields]
-		lw = 1  # line width
-		maximun_vol = 0
-
-		# Create traces
-		fig = go.Figure()
-		for item in dataFields:
-			maximun_vol = max(data[item].max(), maximun_vol)
-			fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
-		maximun_vol = round(maximun_vol // 5 * 5)+5
-		fig.update_layout(xaxis_title='Date',
-						  yaxis=dict(title_text='Traffic Volume per Lane', range=[0, maximun_vol],
-									 showticklabels=True),
-						  legend=dict(x=.01, y=0),
-						  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
-		st.plotly_chart(fig)
-
-		st.markdown("### Rush Hour Traffic Volume Tablular Data")
-
-		# rename column headers
-		df_pv.columns = ['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV']
-
-		dataFields = st.multiselect('Show Data Type', list(df_pv.columns.values),
-				default=['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'])
 
 
-		st.write(df_pv[dataFields])
-		st.markdown("Download the tabular data as a CSV file:")
-		st.markdown(get_table_download_link(df_pv[dataFields]), unsafe_allow_html=True)
+	st.markdown("## Volume per Lane at Rush Hour")
+	
+	df_mpv = getMorningPeakVolume(sdate, edate)
+	df_mpv['date'] = df_mpv['date'].astype('datetime64[ns]')
+	df_mpv.rename(columns = {'avg_vol_gp':'Morning_GP', 'avg_vol_hov':'Morning_HOV'}, inplace = True) 
 
-	#st.line_chart(df_pv[dataFields], use_container_width=True)
+	df_epv = getEveningPeakVolume(sdate, edate)
+	df_epv['date'] = df_epv['date'].astype('datetime64[ns]')
+	df_epv.rename(columns = {'avg_vol_gp':'Evening_GP', 'avg_vol_hov':'Evening_HOV'}, inplace = True) 
+
+	df_pv = pd.merge(df_mpv, df_epv, on='date')
+	df_pv.set_index('date')
+	#print(list(df_pv.columns.values))
+	dataFields = st.multiselect('Data fields', ['Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'] , default = ['Morning_GP', 'Evening_GP'] )
+
+	data = df_pv[['date'] + dataFields]
+	lw = 1  # line width
+	maximun_vol = 0
+
+	# Create traces
+	fig = go.Figure()
+	for item in dataFields:
+		maximun_vol = max(data[item].max(), maximun_vol)
+		fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
+	maximun_vol = round(maximun_vol // 5 * 5)+5
+	fig.update_layout(xaxis_title='Date',
+					  yaxis=dict(title_text='Traffic Volume per Lane', range=[0, maximun_vol],
+								 showticklabels=True),
+					  legend=dict(x=.01, y=0),
+					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
+	st.plotly_chart(fig)
+
+	st.markdown("#### Rush Hour Traffic Volume Tablular Data")
+
+	# rename column headers
+	df_pv.columns = ['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV']
+
+	dataFields = st.multiselect('Show Data Type', list(df_pv.columns.values),
+			default=['Time', 'Morning_GP', 'Evening_GP', 'Morning_HOV', 'Evening_HOV'])
+
+
+	st.write(df_pv[dataFields])
+	st.markdown("Download the tabular data as a CSV file:")
+	st.markdown(get_table_download_link(df_pv[dataFields], filename = 'Volume'), unsafe_allow_html=True)
+
+
+	#################################################################
+
+	st.markdown("## Vehilce Miles Traveled (VMT)")
+	
+	sdate_2 = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
+	edate_2 = st.date_input('Select an end date', value = datetime.datetime.now().date())
+	st.write('From ',sdate_2, ' to ',edate_2)
+
+	df_vmt = getVMT(sdate_2, edate_2)
+	df_vmt['date'] = df_vmt['date'].astype('datetime64[ns]')
+	df_vmt.rename(columns = {'vmt_gp':'VMT_GP', 'vmt_hov':'VMT_HOV'}, inplace = True) 
+	df_vmt['VMT_GP'] = df_vmt['VMT_GP'].astype(int)
+	df_vmt['VMT_HOV'] = df_vmt['VMT_HOV'].astype(int)
+	df_vmt.set_index('date')
+	#print(list(df_pv.columns.values))
+	dataFields = st.multiselect('Data fields', ['VMT_GP', 'VMT_HOV'] , default = ['VMT_GP', 'VMT_HOV'] )
+
+	data = df_vmt[['date'] + dataFields]
+	lw = 1  # line width
+	maximun_vol = 0
+
+	# Create traces
+	fig = go.Figure()
+	for item in dataFields:
+		maximun_vol = max(data[item].max(), maximun_vol)
+		fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
+	maximun_vol = round(maximun_vol // 5 * 5)+5
+	fig.update_layout(xaxis_title='Date',
+					  yaxis=dict(title_text='Traffic Volume per Lane', range=[0, maximun_vol],
+								 showticklabels=True),
+					  legend=dict(x=.01, y=0),
+					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
+	st.plotly_chart(fig)
+
+	st.markdown("#### Vehilce Miles Traveled (VMT) Tablular Data")
+
+	# rename column headers
+	df_vmt.columns = ['Date', 'VMT_GP', 'VMT_HOV']
+
+	dataFields = st.multiselect('Show Data Type', list(df_vmt.columns.values),
+			default=['Date', 'VMT_GP', 'VMT_HOV'])
+
+
+	st.write(df_vmt[dataFields])
+	st.markdown("Download the tabular data as a CSV file:")
+	st.markdown(get_table_download_link(df_vmt[dataFields], filename = 'VMT'), unsafe_allow_html=True)
 
 
 def showAbout():

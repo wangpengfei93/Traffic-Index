@@ -143,7 +143,11 @@ def GenerateGeo(TPS):
 	)
 
 	data_gdf = geopandas.GeoDataFrame(scaled_data, crs=fiona.crs.from_epsg(4326))
+
+	# st.write(data_gdf['time'])
+
 	data_gdf['time'] = data_gdf['time'].apply(lambda x: x.isoformat())
+
 
 	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
 
