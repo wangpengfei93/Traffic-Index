@@ -352,6 +352,57 @@ def showCOVID19Figure():
 					  	plot_bgcolor='white')
 	st.plotly_chart(fig)
 
+def checkDateRange(date):
+	out_of_range = False
+	if date > datetime.datetime.now().date():
+		date = datetime.datetime.now().date()
+		out_of_range = True
+	elif date < datetime.datetime(2019, 11, 1).date():
+		date = datetime.datetime(2019, 11, 1).date()
+		out_of_range = True
+	return date, out_of_range
+
+def checkDatesRange(sdate, edate):
+	out_of_range = False
+	dates_reversed = False
+	dates_equal = False
+
+	if sdate > edate:
+		temp = sdate
+		sdate = edate
+		edate = temp
+		dates_reversed = True
+
+	if sdate == edate:
+		sdate = sdate - datetime.timedelta(days=1)
+		edate = edate + datetime.timedelta(days=1)
+		dates_equal= True
+
+	if sdate >= datetime.datetime.now().date():
+		sdate = datetime.datetime.now().date() - datetime.timedelta(days=1)
+		out_of_range = True
+	elif sdate < datetime.datetime(2019, 11, 1).date():
+		sdate = datetime.datetime(2019, 11, 1).date()
+		out_of_range = True
+
+	if edate > datetime.datetime.now().date():
+		edate = datetime.datetime.now().date()
+		out_of_range = True
+	elif edate < datetime.datetime(2019, 11, 1).date():
+		edate = datetime.datetime(2019, 11, 1).date() + datetime.timedelta(days=1)
+		out_of_range = True
+
+	return sdate, edate, out_of_range, dates_reversed, dates_equal
+
+def showDatesWarnings(out_of_range, dates_reversed, dates_equal):
+	if out_of_range and (dates_reversed or dates_equal):
+		st.write('(Note: Date available from', datetime.datetime(2019, 11, 1).date(), 'to', datetime.datetime.now().date(), '. End Date should be greater than Start Date)')
+	elif out_of_range:
+		st.write('(Note: Date available from', datetime.datetime(2019, 11, 1).date(), 'to', datetime.datetime.now().date(), ')')
+	elif dates_reversed or dates_equal:
+		st.write('(Note: End Date should be greater than Start Date)')
+	
+
 #####################################################
 # display functions
 #####################################################
@@ -392,6 +443,9 @@ def IntroduceTrafficIndex():
 	# st.markdown("## Segment-based Traffic Performance Score")
 
 	date = st.date_input('Select a date:', value = datetime.datetime.now().date())
+	date, out_of_range = checkDateRange(date)
+	if out_of_range:
+		st.write('Selected date:', date, '(Data available from', datetime.datetime(2019, 11, 1).date(), 'to', datetime.datetime.now().date(), ')')
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
 	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
 	df_SegTPS = getSegmentTPS_1Hour(datatime1, datatime2)
@@ -495,7 +549,12 @@ def showTrafficIndex():
 
 		sdate_DI = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
 		edate_DI = st.date_input('Select an end date:' , value = datetime.datetime.now().date())
-		st.write('From ',sdate_DI, ' to ', edate_DI,':')
+
+		# Check dates ranges and show warnings
+		sdate_DI, edate_DI, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate_DI, edate_DI)
+		showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+		st.write('**Selected Dates** from ',sdate_DI, ' to ', edate_DI,':')
 
 		df_DailyIndex = getDailyIndex(sdate_DI, edate_DI)
 
@@ -535,7 +594,12 @@ def showTrafficIndex():
 
 		sdate_MI = st.date_input('Pick a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 		edate_MI = st.date_input('Pick an end date:', value = datetime.datetime.now().date())
-		st.write('From ',sdate_MI, ' to ', edate_MI,':')
+
+		# Check dates ranges and show warnings
+		sdate_MI, edate_MI, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate_MI, edate_MI)
+		showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+		st.write('**Selected Dates** from ',sdate_MI, ' to ', edate_MI,':')
 
 		df_TI_range = getTrafficIndexMultiDays(sdate_MI, edate_MI)
 		
@@ -579,7 +643,12 @@ def showTrafficIndex():
 
 		sdate_TD = st.date_input('Pick a start date', value = (datetime.datetime.now() - datetime.timedelta(days=1)))
 		edate_TD = st.date_input('Pick an end date', value = datetime.datetime.now().date())
-		st.write('From ',sdate_TD, ' to ', edate_TD,':')
+		
+		# Check dates ranges and show warnings
+		sdate_TD, edate_TD, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate_TD, edate_TD)
+		showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+		st.write('**Selected Dates** from ',sdate_TD, ' to ', edate_TD,':')
 
 		df_TI_range = getTrafficIndexMultiDays(sdate_TD, edate_TD)
 		
@@ -677,6 +746,9 @@ def showSgementTPS():
 	st.markdown("* In this section, TPS of freeway segments is provided and visualized on an interactive map. "
 				"\n * Segment-based TPS is also visualized separately at the bottom of the page.")
 	date = st.date_input('Select a date:', value = datetime.datetime.now().date())
+	date, out_of_range = checkDateRange(date)
+	if out_of_range:
+		st.write('Selected date:', date, '(Data available from', datetime.datetime(2019, 11, 1).date(), 'to', datetime.datetime.now().date(), ')')
 	
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
 	datatime2 = datetime.datetime.combine(date, datetime.time(23, 59))
@@ -720,7 +792,11 @@ def showSgementTPS():
 	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
 	edate = st.date_input('Select an end date:' , value = datetime.datetime.now().date())
 
-	st.write('From ',sdate, ' to ', edate)
+	# Check dates ranges and show warnings
+	sdate, edate, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate, edate)
+	showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+	st.write('**Selected Dates** from ',sdate, ' to ', edate,':')
 
 	segments = getSegments()
 	segments['label'] = 'Route (' + segments['route'].astype(int).astype(str) + '),\t Direction (' + segments['direction'] + 'B),\t Milepost (' \
@@ -799,7 +875,12 @@ def showCOVID19():
 	#edate = df_COVID19.loc[len(df_COVID19)-1, 'date']
 	sdate = st.date_input('Select a start date', value=datetime.datetime(2020, 2, 28))
 	edate = st.date_input('Select an end date', value=df_COVID19.loc[len(df_COVID19)-1, 'date'])
-	st.write('From ', sdate, ' to ', edate, ':')
+
+	# Check dates ranges and show warnings
+	sdate, edate, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate, edate)
+	showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+	st.write('**Selected Dates** from ',sdate, ' to ', edate,':')
 	# daily index
 	df_DailyIndex = getDailyIndex(sdate, edate)
 
@@ -908,33 +989,20 @@ def showCOVID19():
 	st.markdown("Download COVID-19 related data as a CSV file:")
 	st.markdown(get_table_download_link(data), unsafe_allow_html=True)
 
-def showOtherMetrics():
-	###########
-	# Sidebar #
-	###########
-	# st.sidebar.markdown("## Components")
-	# rushHourVolume = st.sidebar.checkbox("Volume at Rush Hours", value = True)
-	# rushHourVolume = True
+def showVMT():
 	
-	########################
-	# main content
-	########################
-	st.markdown("# Other Traffic Performance Metrics")
-
-	st.markdown('This page shows the variations of other traffic metrics, including '
-				' \n * Vehicle Miles Traveled (VMT) '
-				' \n * Volume per Lane at Rush Hour '
-				# 'Please customize the rush hours and lanes as you need. '
-				#' \n Downloadable tablular data is shown at the bottom of this page. '
-				)
+	st.markdown("# Vehilce Miles of Travel (VMT)")
 	
-	#################################################################
-
-	st.markdown("## Vehilce Miles Traveled (VMT)")
-	
+	st.markdown('This page shows the variations of Vehilce Miles of Travel. '
+		'Downloadable tablular data is shown at the bottom of this page. ')
 	sdate_2 = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
 	edate_2 = st.date_input('Select an end date', value = datetime.datetime.now().date())
-	st.write('From ',sdate_2, ' to ',edate_2)
+	
+	# Check dates ranges and show warnings
+	sdate_2, edate_2, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate_2, edate_2)
+	showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+	st.write('**Selected Dates** from ',sdate_2, ' to ', edate_2,':')
 
 	df_vmt = getVMT(sdate_2, edate_2)
 	df_vmt['date'] = df_vmt['date'].astype('datetime64[ns]')
@@ -964,7 +1032,7 @@ def showOtherMetrics():
 					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
 	st.plotly_chart(fig)
 
-	st.markdown("#### Vehilce Miles Traveled (VMT) Tablular Data")
+	st.markdown("#### VMT Tablular Data")
 
 	# rename column headers
 	df_vmt.columns = ['Date', 'VMT']
@@ -978,6 +1046,82 @@ def showOtherMetrics():
 	st.markdown(get_table_download_link(df_vmt[dataFields], filename = 'VMT'), unsafe_allow_html=True)
 
 
+def showOtherMetrics():
+	###########
+	# Sidebar #
+	###########
+	# st.sidebar.markdown("## Components")
+	# rushHourVolume = st.sidebar.checkbox("Volume at Rush Hours", value = True)
+	# rushHourVolume = True
+	
+	########################
+	# main content
+	########################
+	st.markdown("# Other Traffic Performance Metrics")
+
+	st.markdown('This page shows the variations of traffic metrics, such as Volume per Lane at Rush Hour. '
+				'Other traffic metrics might be added in the future. Enjoy! :sunglasses:'
+				# ' \n * Vehicle Miles of Travel '
+				# ' \n * Volume per Lane at Rush Hour '
+				# 'Please customize the rush hours and lanes as you need. '
+				)
+	st.markdown('Downloadable tablular data is shown at the bottom of this page. ')
+	
+	#################################################################
+
+	# st.markdown("## Vehilce Miles of Travel (VMT)")
+	
+	# sdate_2 = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
+	# edate_2 = st.date_input('Select an end date', value = datetime.datetime.now().date())
+	
+	# # Check dates ranges and show warnings
+	# sdate_2, edate_2, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate_2, edate_2)
+	# showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+	# st.write('**Selected Dates** from ',sdate_2, ' to ', edate_2,':')
+
+	# df_vmt = getVMT(sdate_2, edate_2)
+	# df_vmt['date'] = df_vmt['date'].astype('datetime64[ns]')
+	# df_vmt.rename(columns = {'vmt':'VMT'}, inplace = True) 
+	# df_vmt['VMT'] = df_vmt['VMT'].astype(int)
+
+	# df_vmt.set_index('date')
+	# #print(list(df_pv.columns.values))
+	# # dataFields = st.multiselect('Data fields', ['VMT'] , default = ['VMT'] )
+
+	# # data = df_vmt[['date'] + dataFields]
+	# data = df_vmt
+	# dataFields = ['VMT']
+	# lw = 1  # line width
+	# maximun_vol = 0
+
+	# # Create traces
+	# fig = go.Figure()
+	# for item in dataFields:
+	# 	maximun_vol = max(data[item].max(), maximun_vol)
+	# 	fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
+	# maximun_vol = round(maximun_vol // 5 * 5)+5
+	# fig.update_layout(xaxis_title='Date',
+	# 				  yaxis=dict(title_text='Traffic Volume per Lane', range=[0, maximun_vol],
+	# 							 showticklabels=True),
+	# 				  legend=dict(x=.01, y=0),
+	# 				  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
+	# st.plotly_chart(fig)
+
+	# st.markdown("#### VMT Tablular Data")
+
+	# # rename column headers
+	# df_vmt.columns = ['Date', 'VMT']
+
+	# dataFields = st.multiselect('Show Data Type', list(df_vmt.columns.values),
+	# 		default=['Date', 'VMT'])
+
+
+	# st.write(df_vmt[dataFields])
+	# st.markdown("Download the tabular data as a CSV file:")
+	# st.markdown(get_table_download_link(df_vmt[dataFields], filename = 'VMT'), unsafe_allow_html=True)
+
+
 	#################################################################################################################
 
 	st.markdown("## Volume per Lane at Rush Hour")
@@ -987,7 +1131,11 @@ def showOtherMetrics():
 
 	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
 	edate = st.date_input('Select an end date:', value = datetime.datetime.now().date())
-	st.write('From ',sdate, ' to ',edate)
+	# Check dates ranges and show warnings
+	sdate, edate, out_of_range, dates_reversed, dates_equal = checkDatesRange(sdate, edate)
+	showDatesWarnings(out_of_range, dates_reversed, dates_equal)
+
+	st.write('**Selected Dates** from ',sdate, ' to ', edate,':')
 
 
 
@@ -1134,7 +1282,8 @@ def main():
 
 	st.sidebar.title("Traffic Performance Score (TPS)")
 	app_mode = st.sidebar.radio("Navigation",
-	        ["Home", "About this Website & TPS", "Network-based TPS", "Segment-based TPS", "Impact of COVID-19", "VMT & Other Traffic Metrics"])
+	        ["Home", "About this Website & TPS", "Network-based TPS", "Segment-based TPS", \
+	        "Impact of COVID-19", "Vehicle Miles of Travel", "Other Traffic Metrics"])
 	# st.sidebar.markdown("[![this is an image link](./images/STARLab.png)](https://streamlit.io)")
 	if  app_mode == "Home":
 		IntroduceTrafficIndex()
@@ -1146,7 +1295,9 @@ def main():
 		showSgementTPS()
 	elif app_mode == "Impact of COVID-19":
 		showCOVID19()
-	elif app_mode == "VMT & Other Traffic Metrics":
+	elif app_mode == "Vehicle Miles of Travel":
+		showVMT()
+	elif app_mode == "Other Traffic Metrics":
 		showOtherMetrics()
 	
 
