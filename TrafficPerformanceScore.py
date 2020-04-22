@@ -350,18 +350,18 @@ def IntroduceTrafficIndex():
 	###########
 	st.markdown("# Traffic Performance Score in the Greater Seattle Area")
 	# st.markdown("## Introduction to Traffic Performance Score")
-	st.markdown("In this website, Traffic Performance Score (TPS) indicating the overall performance "
-				"of the freeway networks in the Greater Seattle area is calculated and visualized. "
+	# st.markdown("In this website, Traffic Performance Score (TPS) indicating the overall performance "
+	# 			"of the freeway networks in the Greater Seattle area is calculated and visualized. "
 				
-				# "With this website, you can view "
-				# "\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
-				# "\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
-				# "\n * Traffic changes in response to COVID-19 reflected by the TPS. "
-				# "\n * Other traffic performance metrics. " 
-				)
-	st.markdown("The **TPS** is a value ranges from 0% to 100%. "
-				"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. "
-				"The TPS calculation and the data source are described in the ***About*** page. ")
+	# 			# "With this website, you can view "
+	# 			# "\n * Temporal dynamic of network-wide TPS of different types of lanes with various time resolutions, ranging from 5 minutes to one day."
+	# 			# "\n * Varying Spatial distribution of segment-based TPS on interactive maps. "
+	# 			# "\n * Traffic changes in response to COVID-19 reflected by the TPS. "
+	# 			# "\n * Other traffic performance metrics. " 
+	# 			)
+	# st.markdown("The **TPS** is a value ranges from 0% to 100%. "
+	# 			"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. "
+	# 			"The TPS calculation and the data source are described in the ***About*** page. ")
 	st.markdown("To view more information, please select on the left ***navigation*** panel. Enjoy! :sunglasses:")
 	
 
@@ -371,7 +371,7 @@ def IntroduceTrafficIndex():
 	# showCOVID19Figure()
 
 	#################################################################
-	st.markdown("## Segment-based Traffic Performance Score")
+	# st.markdown("## Segment-based Traffic Performance Score")
 
 	date = st.date_input('Select a date:', value = datetime.datetime.now().date())
 	datatime1 = datetime.datetime.combine(date, datetime.time(00, 00))
@@ -1021,7 +1021,7 @@ def main():
 
 	st.sidebar.title("Traffic Performance Score")
 	app_mode = st.sidebar.radio("Navigation",
-	        ["Home", "Network-based TPS", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics", "About"])
+	        ["Home", "About this Website & TPS", "Network-based TPS", "Segment-based TPS", "Impact of COVID-19", "Other Traffic Metrics"])
 	# st.sidebar.markdown("[![this is an image link](./images/STARLab.png)](https://streamlit.io)")
 	if  app_mode == "Home":
 		IntroduceTrafficIndex()
@@ -1033,7 +1033,7 @@ def main():
 		showCOVID19()
 	elif app_mode == "Other Traffic Metrics":
 		showOtherMetrics()
-	elif app_mode == "About":
+	elif app_mode == "About this Website & TPS":
 		showAbout()
 
 
