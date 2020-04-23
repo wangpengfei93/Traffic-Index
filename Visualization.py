@@ -145,7 +145,7 @@ def GenerateGeo(TPS):
 
 	data_gdf = geopandas.GeoDataFrame(scaled_data, crs=fiona.crs.from_epsg(4326))
 
-	data_gdf['time'] = data_gdf['time'].apply(lambda x: datetime.fromtimestamp(datetime.timestamp(x)).astimezone().isoformat()) 
+	data_gdf['time'] = data_gdf['time'].apply(lambda x: x.isoformat()) 
 
 
 	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
@@ -154,14 +154,6 @@ def GenerateGeo(TPS):
 	folium.GeoJson(data_gdf, style_function= style_func_HOV, tooltip = tooltip_HOV, name = 'HOV Lane', show = False).add_to(m)
 
 	colormap.add_to(m)
-	# full screen plugins
-	# plugins.Fullscreen(
-	# 	position='topright',
-	# 	title='Expand me',
-	# 	title_cancel='Exit me',
-	# 	force_separate_button=True
-	# ).add_to(m)
-	# folium.LayerControl(collapsed=False).add_to(m)
 
 	STREAMLIT_STATIC_PATH = os.path.join(os.path.dirname(st.__file__), 'static')
 
