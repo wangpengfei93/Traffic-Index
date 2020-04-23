@@ -514,6 +514,8 @@ def IntroduceTrafficIndex():
 	st.write("Main lane: general purpose (GP) lane. ")
 	st.write("HOV lane: high-occupancy vehicle lane, also known as carpool lane. ")
 
+	st.write('<a href="https://clustrmaps.com/site/1b7ap" title="Visit tracker"><img src="//clustrmaps.com/map_v2.png?cl=ffffff&w=70&t=n&d=jn07mPkuDBD9jMBfRsCUgcfZN5e7Z2SydqZ3ItFsfv4&co=ffffff&ct=ffffff" /></a>', unsafe_allow_html=True)
+
 
 	
 def showTrafficIndex():
@@ -1336,8 +1338,7 @@ def main():
 	image_pactrans = Image.open('images/PacTrans.png')
 	st.sidebar.image(image_pactrans, width = 80, use_column_width=False)
 
-	st.write('<a href="https://clustrmaps.com/site/1b7ap" title="Visit tracker"><img src="//clustrmaps.com/map_v2.png?cl=080808&w=a&t=t&d=jn07mPkuDBD9jMBfRsCUgcfZN5e7Z2SydqZ3ItFsfv4&co=ffffff&ct=808080" /></a>', unsafe_allow_html=True)
-
+	
 	# image_uw = Image.open('images/UW2.png')
 	# st.sidebar.image(image_uw, width = 300, use_column_width=False)
 
