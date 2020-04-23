@@ -1233,7 +1233,7 @@ def showAbout():
 	st.markdown("Group member: Zhiyong Cui, Meixin Zhu, Pengfei Wang, Yang Zhou, Qianxia Cao, and Shuo Wang")
 
 	# st.write('<script type="text/javascript" id="clstr_globe" src="//cdn.clustrmaps.com/globe.js?d=q_qd3mQ6FdC52ZJRUtern-mmVaK1RER3n2BPh-FTy-Y"></script>', unsafe_allow_html=True)
-	st.write('<a href="https://clustrmaps.com/site/1b7ap" title="Visit tracker"><img src="//clustrmaps.com/map_v2.png?cl=080808&w=a&t=tt&d=jn07mPkuDBD9jMBfRsCUgcfZN5e7Z2SydqZ3ItFsfv4&co=ffffff&ct=808080" /></a>', unsafe_allow_html=True)
+	st.write('<a href="https://clustrmaps.com/site/1b7ap" title="Visit tracker"><img src="//clustrmaps.com/map_v2.png?cl=080808&w=a&t=t&d=jn07mPkuDBD9jMBfRsCUgcfZN5e7Z2SydqZ3ItFsfv4&co=ffffff&ct=808080" /></a>', unsafe_allow_html=True)
 
 
 def showLoopDetectorMap():	
