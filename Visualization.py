@@ -1,5 +1,6 @@
 import pyodbc
 import pandas as pd
+import numpy as np
 from geojson import LineString, Feature, FeatureCollection, dump
 import folium 
 import streamlit as st
@@ -13,7 +14,6 @@ from folium.features import GeoJson, GeoJsonTooltip
 from folium import plugins
 import fiona
 import fiona.crs
-#import pdb
 from datetime import datetime
 
 from sys import platform 
@@ -180,8 +180,8 @@ def	GenerateGeoAnimation(TPS):
 	segment.rename(columns={"segmentid": "segmentID"}, inplace = True)
 	data = segment.merge(TPS, on = ['segmentID'], how = 'left')
 	
-	data['TrafficIndex_GP'].fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
-	data['TrafficIndex_HOV'].fillna(1, inplace = True) # fill nan with zero, becuase Out of range float values are not JSON compliant: nan
+	data['TrafficIndex_GP'] = data['TrafficIndex_GP'].fillna(1) 
+	data['TrafficIndex_HOV'] = data['TrafficIndex_HOV'].fillna(1) 
 
 	scaled_data = data
 	scaled_data['TrafficIndex_GP'] = data['TrafficIndex_GP']*100
@@ -190,16 +190,13 @@ def	GenerateGeoAnimation(TPS):
 	temporal_data = segment.merge(TPS, on = ['segmentID'], how = 'left')
 	temporal_data['TrafficIndex_GP'] = temporal_data['TrafficIndex_GP']*100
 	temporal_data['TrafficIndex_HOV'] = temporal_data['TrafficIndex_HOV']*100
-
+	
 	features = []
 	for _, line in temporal_data.iterrows():
-	    route = line['geometry']
-	    try:
-	        features.append(Feature(geometry = route, properties={"TrafficIndex_GP":float(line['TrafficIndex_GP']), "name": line["name"], 
-	                                                          "times":[line['time']]*len(line['geometry'].coords), "style":{"color": colormap(line['TrafficIndex_GP'])}}))
-	    except:
-	        continue
-
+		route = line['geometry']
+		features.append(Feature(geometry = route, properties={"TrafficIndex_GP":float(line['TrafficIndex_GP']), 
+		"name": line["name"],"times":[line['time']]*len(line['geometry'].coords), 
+		"style":{"color": colormap(line['TrafficIndex_GP']) if not np.isnan(line['TrafficIndex_GP']) else 'green'}}))
 
 	m = folium.Map([47.673650, -122.260540], zoom_start=10, tiles="cartodbpositron")
 
@@ -210,11 +207,7 @@ def	GenerateGeoAnimation(TPS):
 
 	colormap.add_to(m)
 
-	# folium.LayerControl(collapsed=False).add_to(m)
-
 	STREAMLIT_STATIC_PATH = os.path.join(os.path.dirname(st.__file__), 'static')
-
-	# st.write(os.path.dirname(st.__file__) + '\\static')
 
 	for filename in glob.glob(os.path.join(STREAMLIT_STATIC_PATH, 'ani*')):
 		os.remove(filename)
