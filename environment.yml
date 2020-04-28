@@ -1,4 +1,4 @@
-name: tps1
+name: tps
 channels:
   - conda-forge
   - defaults
