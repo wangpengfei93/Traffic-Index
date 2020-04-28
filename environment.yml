@@ -1,0 +1,16 @@
+name: tps1
+channels:
+  - conda-forge
+  - defaults
+dependencies:
+  - folium=0.10.1
+  - geojson=2.5.0
+  - geopandas=0.7.0
+  - plotly=4.6.0
+  - pyodbc=4.0.30
+  - pypyodbc=1.3.5
+  - python=3.6.10
+  - pip:
+    - streamlit==0.58.0
+    - requests_html
+    
