@@ -993,9 +993,9 @@ def showCOVID19():
 
 def showVMT():
 	
-	st.markdown("# Vehilce Miles of Travel (VMT)")
+	st.markdown("# Vehicle Miles of Travel (VMT)")
 	
-	st.markdown('This page shows the variations of Vehilce Miles of Travel. '
+	st.markdown('This page shows the variations of Vehicle Miles of Travel. '
 		'Downloadable tablular data is shown at the bottom of this page. ')
 	sdate_2 = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
 	edate_2 = st.date_input('Select an end date', value = datetime.datetime.now().date())
@@ -1071,7 +1071,7 @@ def showOtherMetrics():
 	
 	#################################################################
 
-	# st.markdown("## Vehilce Miles of Travel (VMT)")
+	# st.markdown("## Vehicle Miles of Travel (VMT)")
 	
 	# sdate_2 = st.date_input('Select a start date', value = (datetime.datetime.now() - datetime.timedelta(days=90)))
 	# edate_2 = st.date_input('Select an end date', value = datetime.datetime.now().date())
