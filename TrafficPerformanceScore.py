@@ -791,7 +791,7 @@ def showSgementTPS():
 	#####
 	st.markdown("# Route-based Traffic Preformance Score")
 
-	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=30)))
+	sdate = st.date_input('Select a start date:', value = (datetime.datetime.now() - datetime.timedelta(days=7)))
 	edate = st.date_input('Select an end date:' , value = datetime.datetime.now().date())
 
 	# Check dates ranges and show warnings
@@ -800,33 +800,48 @@ def showSgementTPS():
 
 	st.write('**Selected Dates** from ',sdate, ' to ', edate,':')
 
-	segments = getSegments()
-	segments['label'] = 'Route (' + segments['route'].astype(int).astype(str) + '),\t Direction (' + segments['direction'] + 'B),\t Milepost (' \
-						+ segments['milepost_small'].astype(int).astype(str) + ', ' + segments['milepost_large'].astype(int).astype(str) + ')'
+	# segments = getSegments()
+	# segments['label'] = 'Route (' + segments['route'].astype(int).astype(str) + '),\t Direction (' + segments['direction'] + 'B),\t Milepost (' \
+	# 					+ segments['milepost_small'].astype(int).astype(str) + ', ' + segments['milepost_large'].astype(int).astype(str) + ')'
 	
-	segmentLabel = st.selectbox("", segments['label'].iloc[0:10].values.tolist())
-	segmentID = segments[segments['label'] == segmentLabel]['segmentid'].values.tolist()[0]
-	# st.write(segmentID.values.tolist()[0])
-	df_SegTPS_Day = getSegmentTPS_Day(sdate, edate, segmentID)
+	# segmentLabel = st.selectbox("", segments['label'].iloc[0:10].values.tolist())
+	# segmentID = segments[segments['label'] == segmentLabel]['segmentid'].values.tolist()[0]
+
+	segments = getSegments()
+	segments['route_dir'] = 'Route ' + segments['route'].astype(int).astype(str) + '\t, ' + segments['direction'] + 'B'
+	segments['milepost_pair'] = 'Milepost ( ' + segments['milepost_small'].astype(str) + '\t, ' + segments['milepost_large'].astype(str) +' )'
+	segments_route_dir = segments['route_dir'].drop_duplicates()
+	route_dir = st.selectbox("Select a route:", segments_route_dir.values.tolist())
+
+	segments_milepost_pair = segments[segments['route_dir'] == route_dir]['milepost_pair']
+	milepost_pair = st.selectbox("Select a segment:", segments_milepost_pair.values.tolist())
+
+	segmentID = segments[(segments['route_dir'] == route_dir) & (segments['milepost_pair'] == milepost_pair)]['segmentid']
+
+	df_SegTPS = getSegmentTPS_1Hour(sdate, edate)
+
+	df_SegTPS = df_SegTPS[df_SegTPS['segmentid'] == segmentID.values[0]]
+
+	# st.write(df_SegTPS)
+	# df_SegTPS_Day = getSegmentTPS_Day(sdate, edate, segmentID)
 
 	# st.write(segments['label'])
 
 	# remove outliers from HOV traffic index
-	df_SegTPS_Day.loc[df_SegTPS_Day['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
+	df_SegTPS.loc[df_SegTPS['avg_vol_hov'] == 0, 'trafficindex_hov'] = 1.0
 
-	df_SegTPS_Day['trafficindex_gp'] = df_SegTPS_Day['trafficindex_gp'] * 100
-	# df_TI_range['trafficindex_gp'] = df_TI_range['trafficindex_gp'].astype('int64')
-	df_SegTPS_Day['trafficindex_hov'] = df_SegTPS_Day['trafficindex_hov'] * 100
-	df_SegTPS_Day['time'] = pd.to_datetime(df_SegTPS_Day['time'])
+	df_SegTPS['trafficindex_gp'] = df_SegTPS['trafficindex_gp'] * 100
+	df_SegTPS['trafficindex_hov'] = df_SegTPS['trafficindex_hov'] * 100
+	df_SegTPS['time'] = pd.to_datetime(df_SegTPS['time'])
 
 	lw = 1  # line width
-	minimum_score = min(df_SegTPS_Day['trafficindex_gp'].min(), df_SegTPS_Day['trafficindex_hov'].min())
+	minimum_score = min(df_SegTPS['trafficindex_gp'].min(), df_SegTPS['trafficindex_hov'].min())
 	minimum_score = round(minimum_score // 5 * 5)
 	fig = go.Figure()
-	fig.add_trace(go.Scatter(x=df_SegTPS_Day['time'], y=df_SegTPS_Day['trafficindex_gp'],
+	fig.add_trace(go.Scatter(x=df_SegTPS['time'], y=df_SegTPS['trafficindex_gp'],
 							 mode='lines', line=dict(dash='solid', width=lw),
 							 name='Main lane'))
-	fig.add_trace(go.Scatter(x=df_SegTPS_Day['time'], y=df_SegTPS_Day['trafficindex_hov'],
+	fig.add_trace(go.Scatter(x=df_SegTPS['time'], y=df_SegTPS['trafficindex_hov'],
 							 mode='lines', line=dict(dash='solid', width=lw),
 							 name='HOV lane'))
 
