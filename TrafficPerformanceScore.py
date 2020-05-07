@@ -431,7 +431,10 @@ def IntroduceTrafficIndex():
 	# st.markdown("The **TPS** is a value ranges from 0% to 100%. "
 	# 			"The closer to 100% the **TPS** is, the better the overall network-wide traffic condition is. "
 	# 			"The TPS calculation and the data source are described in the ***About*** page. ")
-	st.markdown("To view more information, please select on the left ***navigation*** panel. Enjoy! :sunglasses:")
+	st.markdown("Urban traffic status affects our everyday lives. "
+				"This website shows timely measurements of the traffic performance in the Greater Seattle area. "
+				"To view more information, please select on the left ***navigation*** panel. "
+				"Your feedback is greatly welcome.")
 	
 
 	#################################################################
@@ -1027,35 +1030,128 @@ def showVMT():
 	df_vmt['VMT'] = df_vmt['VMT'].astype(int)
 
 	df_vmt.set_index('date')
+	df_vmt['dow'] = df_vmt['date'].dt.weekday
+	vmt_baseline = pd.DataFrame(np.array([[0, 15395589], [1, 15633580], [2, 15831616], [3, 16128306], [4, 16857911], [5, 14527603], [6, 12425555]]),
+                   columns=['dow', 'vmt_base'])
+	df_vmt = pd.merge(df_vmt, vmt_baseline, on='dow')
+	df_vmt['change'] = (df_vmt['VMT'] - df_vmt['vmt_base'])/df_vmt['vmt_base']
+	df_vmt = df_vmt.sort_values(by='date')
+	df_vmt.set_index('date')
 	#print(list(df_pv.columns.values))
 	# dataFields = st.multiselect('Data fields', ['VMT'] , default = ['VMT'] )
 
 	# data = df_vmt[['date'] + dataFields]
-	data = df_vmt
+
+	start_date = df_vmt.date.iloc[0].to_pydatetime() - pd.DateOffset(days=1)
+	end_date = df_vmt.date.iloc[-1].to_pydatetime() + pd.DateOffset(days=1)
+
+	data = df_vmt[['date', 'VMT', 'change']]
 	dataFields = ['VMT']
 	lw = 1  # line width
 	maximun_vol = 0
 
-	# Create traces
-	fig = go.Figure()
-	for item in dataFields:
-		maximun_vol = max(data[item].max(), maximun_vol)
-		fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
-	maximun_vol = round(maximun_vol // 5 * 5)+5
-	fig.update_layout(xaxis_title='Date',
-					  yaxis=dict(title_text='VMT', range=[0, maximun_vol],
-								 showticklabels=True),
-					  legend=dict(x=.01, y=0),
-					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
+	fig = make_subplots(specs=[[{"secondary_y": True}]])
+
+	# Add traces for axis-1
+	fig.add_trace(go.Scatter(x=data['date'], y=data['VMT'],
+							 mode='lines+markers', line=dict(dash='solid', width=lw, color='blue'), marker=dict(size=4),
+							 name='VMT',
+							 legendgroup='group1'),
+					secondary_y=True)
+
+	# Add traces for axis-2
+	fig.add_trace(go.Scatter(x=data['date'], y=data['change'],
+							 mode='lines+markers', line=dict(dash='solid', width=lw, color='green'), marker=dict(size=4),
+							 name='VMT Compare to baseline (Jan & Feb 2020)',
+							 legendgroup='group2'),
+					secondary_y=False)
+
+	# Add shapes
+	fig.add_shape(
+	        # Line Vertical
+	        dict(
+	            type="line",
+	            x0=start_date,
+	            y0=0,
+	            x1=end_date,
+	            y1=0,
+	            line=dict(
+	                color="gray",
+	                width=2
+	            )
+	))
+	fig.add_annotation(dict(font=dict(color="green",size=12),
+                            #x=x_loc,
+                            x=start_date + pd.DateOffset(days=5),
+                            y=-0.1,
+                            showarrow=False,
+                            text='<b>baseline</b>',
+                            textangle=0,
+                           ))
+
+	fig.update_traces(textposition='top center')
+	# Set x-axis title
+	fig.update_xaxes(title_text="Date")
+	# Set y-axes titles
+	fig.update_yaxes(title_text="VMT changes", 
+					range=[-0.7, 0.7], 
+					showline=True, 
+					linecolor='rgb(204, 204, 204)', 
+					linewidth=2, 
+					showticklabels=True, 
+					ticks='outside', 
+					tickformat=',.0%',
+					secondary_y=False)
+	fig.update_yaxes(title_text="VMT",
+						range=[0, 20000000], 
+						showline=True, 
+						linecolor='rgb(204, 204, 204)', 
+						linewidth=2, 
+						showticklabels=True, 
+						ticks='outside', 
+						secondary_y=True)
+	fig.update_layout(xaxis=dict(
+					    showline=True,
+					    showgrid=False,
+					    showticklabels=True,
+					    linecolor='rgb(204, 204, 204)',
+					    linewidth=2,
+					    ticks='outside',
+					    tickfont=dict(
+					        family='Arial',
+					        size=12,
+					        color='rgb(82, 82, 82)',
+					    ),
+					),
+					legend=dict(x= 0, y=1, orientation="h"),
+				  	margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), 
+				  	width = 750, 
+				  	height = 450,
+				  	plot_bgcolor='white')
 	st.plotly_chart(fig)
+
+
+	# Create traces
+	# fig = go.Figure()
+	# for item in dataFields:
+	# 	maximun_vol = max(data[item].max(), maximun_vol)
+	# 	fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
+	# maximun_vol = round(maximun_vol // 5 * 5)+5
+	# fig.update_layout(xaxis_title='Date',
+	# 				  yaxis=dict(title_text='VMT', range=[0, maximun_vol],
+	# 							 showticklabels=True),
+	# 				  legend=dict(x=.01, y=0),
+	# 				  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
+	# st.plotly_chart(fig)
 
 	st.markdown("#### VMT Tablular Data")
 
+	df_vmt = df_vmt[['date', 'VMT', 'change']]
 	# rename column headers
-	df_vmt.columns = ['Date', 'VMT']
+	df_vmt.columns = ['Date', 'VMT', 'VMT Change']
 
 	dataFields = st.multiselect('Show Data Type', list(df_vmt.columns.values),
-			default=['Date', 'VMT'])
+			default=['Date', 'VMT', 'VMT Change'])
 
 
 	st.write(df_vmt[dataFields])
@@ -1141,7 +1237,7 @@ def showOtherMetrics():
 
 	#################################################################################################################
 
-	st.markdown("## Volume per Lane at Rush Hour")
+	st.markdown("## Volume per Lane at Rush Hour per Minute")
 
 	st.markdown("Tips: Morning rush hours: 6:00AM-9:00AM; Evening rush hours: 3:00PM-6:00PM")
 
@@ -1180,7 +1276,7 @@ def showOtherMetrics():
 		fig.add_trace(go.Scatter(x=data['date'], y=data[item], mode='lines', line=dict(dash='solid', width=lw), name=item))
 	maximun_vol = round(maximun_vol // 5 * 5)+5
 	fig.update_layout(xaxis_title='Date',
-					  yaxis=dict(title_text='Traffic Volume per Lane', range=[0, maximun_vol],
+					  yaxis=dict(title_text='Traffic Volume per Lane per Minute', range=[0, maximun_vol],
 								 showticklabels=True),
 					  legend=dict(x=.01, y=0),
 					  margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=20), width=700, height=450)
@@ -1247,7 +1343,7 @@ def showAbout():
 	#################################################################
 	st.markdown("## Development Credit")
 	st.markdown("This website is developed by the Artificial Intelligence group in the Smart Transportation Application and Research Lab ([STAR Lab](http://www.uwstarlab.org/)). ")
-	st.markdown("Group member: Zhiyong Cui, Meixin Zhu, Pengfei Wang, Yang Zhou, Qianxia Cao, and Shuo Wang")
+	st.markdown("Group member: Zhiyong Cui, Meixin Zhu, Pengfei Wang, Yang Zhou, Qianxia Cao, Shuo Wang, Cole Kopca, and John Ash.")
 
 	# st.write('<script type="text/javascript" id="clstr_globe" src="//cdn.clustrmaps.com/globe.js?d=q_qd3mQ6FdC52ZJRUtern-mmVaK1RER3n2BPh-FTy-Y"></script>', unsafe_allow_html=True)
 	# st.write('<a href="https://clustrmaps.com/site/1b7ap" title="Visit tracker"><img src="//clustrmaps.com/map_v2.png?cl=080808&w=a&t=t&d=jn07mPkuDBD9jMBfRsCUgcfZN5e7Z2SydqZ3ItFsfv4&co=ffffff&ct=808080" /></a>', unsafe_allow_html=True)
