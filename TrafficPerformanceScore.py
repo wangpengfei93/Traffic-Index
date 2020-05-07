@@ -1045,6 +1045,7 @@ def showVMT():
 	start_date = df_vmt.date.iloc[0].to_pydatetime() - pd.DateOffset(days=1)
 	end_date = df_vmt.date.iloc[-1].to_pydatetime() + pd.DateOffset(days=1)
 
+	# st.write(type(start_date))
 	data = df_vmt[['date', 'VMT', 'change']]
 	dataFields = ['VMT']
 	lw = 1  # line width
@@ -1062,7 +1063,7 @@ def showVMT():
 	# Add traces for axis-2
 	fig.add_trace(go.Scatter(x=data['date'], y=data['change'],
 							 mode='lines+markers', line=dict(dash='solid', width=lw, color='green'), marker=dict(size=4),
-							 name='VMT Compare to baseline (Jan & Feb 2020)',
+							 name='VMT Changes w.r.t. Baseline (Jan & Feb 2020)',
 							 legendgroup='group2'),
 					secondary_y=False)
 
@@ -1077,9 +1078,27 @@ def showVMT():
 	            y1=0,
 	            line=dict(
 	                color="gray",
-	                width=2
+	                width=1,
+
 	            )
 	))
+
+	# Add shapes
+	# fig.add_shape(
+	#         # Line Vertical
+	#         dict(
+	#             type="line",
+	#             x0=start_date,
+	#             y0=-1,
+	#             x1=start_date,
+	#             y1=1,
+	#             line=dict(
+	#                 color="pink",
+	#                 width=1,
+	#                 dash="dashdot",
+	#             )
+	# ))
+
 	fig.add_annotation(dict(font=dict(color="green",size=12),
                             #x=x_loc,
                             x=start_date + pd.DateOffset(days=5),
@@ -1089,11 +1108,28 @@ def showVMT():
                             textangle=0,
                            ))
 
+	# fig.add_annotation(
+	#             x=start_date + pd.DateOffset(days=5),
+	#             y=-0.5,
+	#             text="dict Text",
+	#             arrowhead=1,
+	#             ax=0,
+	#             ay=40)
+
+	# fig.add_annotation(dict(
+	#             x=start_date + pd.DateOffset(days=5),
+ #                y=-0.1,
+	#             showarrow=True,
+	#             arrowhead=1,
+	#             ax=0,
+	#             ay=40
+	# ))
+
 	fig.update_traces(textposition='top center')
 	# Set x-axis title
 	fig.update_xaxes(title_text="Date")
 	# Set y-axes titles
-	fig.update_yaxes(title_text="VMT changes", 
+	fig.update_yaxes(title_text="VMT Changes w.r.t. Baseline", 
 					range=[-0.7, 0.7], 
 					showline=True, 
 					linecolor='rgb(204, 204, 204)', 
@@ -1125,7 +1161,7 @@ def showVMT():
 					),
 					legend=dict(x= 0, y=1, orientation="h"),
 				  	margin=go.layout.Margin(l=50, r=0, b=50, t=10, pad=4), 
-				  	width = 750, 
+				  	width = 700, 
 				  	height = 450,
 				  	plot_bgcolor='white')
 	st.plotly_chart(fig)
