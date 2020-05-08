@@ -1189,7 +1189,11 @@ def showVMT():
 	dataFields = st.multiselect('Show Data Type', list(df_vmt.columns.values),
 			default=['Date', 'VMT', 'VMT Change'])
 
-
+	
+	df_vmt.reset_index(drop=True, inplace=True) # Resets the index, makes factor a column
+	# df_vmt.drop("Factor",axis=1,inplace=True)
+	
+	# st.table(df_vmt[dataFields])
 	st.write(df_vmt[dataFields])
 	st.markdown("Download the tabular data as a CSV file:")
 	st.markdown(get_table_download_link(df_vmt[dataFields], filename = 'VMT'), unsafe_allow_html=True)
