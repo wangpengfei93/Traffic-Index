@@ -707,8 +707,8 @@ def get_data_from_sel(url, sel):
 def update_and_get_covid19_info(url):
 
     sel_date = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(1)'
-    sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span > span:nth-child(1)'
-    sel_death = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(4) > span:nth-child(1)'
+    sel_cases = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(3) > span.cbs-ibr'
+    sel_death = '#mw-content-text > div > div.barbox.tright > div > table > tbody > tr > td:nth-child(4) > span.cbs-ibr'
     
     try:
 
@@ -887,7 +887,8 @@ def showCOVID19():
 
 	#################################################################
 	# get COVID info and update csv
-	url = 'https://en.wikipedia.org/wiki/Template:2019%E2%80%9320_coronavirus_pandemic_data/United_States/Washington_State_medical_cases_chart'
+	# url = 'https://en.wikipedia.org/wiki/Template:2019%E2%80%9320_coronavirus_pandemic_data/United_States/Washington_State_medical_cases_chart'
+	url = 'https://en.wikipedia.org/wiki/Template:COVID-19_pandemic_data/United_States/Washington_State_medical_cases_chart'
 	df_COVID19 = update_and_get_covid19_info(url)
 	df_COVID19['date'] = df_COVID19['date'].astype('datetime64[ns]')
 	# st.write(df_COVID19)
